@@ -47,7 +47,7 @@ function init(){
 	
 
 	pointLight =
- 	new THREE.PointLight(0xFF00FF);
+ 	new THREE.PointLight(0xFFFFFF);
 
 	// set its position
 	pointLight.position.x = 10;
@@ -75,11 +75,11 @@ function initPlane(){
 	texture.repeat.set( 4, 4 );
 
 	var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
-	var plane = new THREE.Mesh( geometry, material );
+	plane = new THREE.Mesh( geometry, material );
 
 	plane.rotation.x += (deg2rad(90));
 	scene.add( plane );
-	return plane;
+	return;
 }
 
 function addSphere(){
@@ -113,8 +113,8 @@ function addSphere(){
 
 function render(){
 	step += 0.01;
-	pointLight.position.y = Math.sin(step)*300; 
-	pointLight.position.x = 75 - Math.cos(step)* 75; 
+	// pointLight.position.y = Math.sin(step)*300; 
+	// pointLight.position.x = 75 - Math.cos(step)* 75; 
 	
 
 	renderer.render(scene, camera);
@@ -122,10 +122,34 @@ function render(){
 
 function animate(){
 	requestAnimationFrame(animate);
-
-
+	//define wave origine
+	var center = new THREE.Vector2(0,500);
+	var vLength = plane.geometry.vertices.length;
+  	for (var i = 0; i < vLength; i++) {
+	    var v = plane.geometry.vertices[i];
+	    var dist = new THREE.Vector2(v.x, v.y).sub(center);
+	    var size = 10.0;
+	    var magnitude = 5.0;
+	    v.z = Math.sin(dist.length()/size + (step)) * magnitude;
+	}
+	plane.geometry.verticesNeedUpdate = true;
 	render();
 }
+
+// function drawFrame(ts){
+//   var center = new THREE.Vector2(0,0);
+//   window.requestAnimationFrame(drawFrame);
+//   var vLength = plane.geometry.vertices.length;
+//   for (var i = 0; i < vLength; i++) {
+//     var v = plane.geometry.vertices[i];
+//     var dist = new THREE.Vector2(v.x, v.y).sub(center);
+//     var size = 5.0;
+//     var magnitude = 2.0;
+//     v.z = Math.sin(dist.length()/size + (ts/500)) * magnitude;
+//   }
+//   plane.geometry.verticesNeedUpdate = true;
+//   renderer.render(scene, camera);
+// };
 
 function initCtrl(){
 	var drag = false;
