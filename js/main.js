@@ -20,9 +20,6 @@ function init(){
 	  NEAR = 0.1,
 	  FAR = 10000;
 
-	//var container  = document.getElementById("render");
-	console.log(container);
-
 	// create a WebGL renderer, camera
 	// and a scene;
 	camera =
@@ -59,6 +56,13 @@ function init(){
 
 	// add to the scene
 	scene.add(pointLight);
+
+	ambLight =
+ 	new THREE.AmbientLight(0x333333);
+
+ 	scene.add(ambLight);
+
+	
 	return scene;
 }
 
@@ -108,10 +112,9 @@ function addSphere(){
 
 
 function render(){
-	console.log(step);
 	step += 0.01;
 	pointLight.position.y = Math.sin(step)*300; 
-	pointLight.position.x = 150 - Math.cos(step)*300; 
+	pointLight.position.x = 75 - Math.cos(step)* 75; 
 	
 
 	renderer.render(scene, camera);
@@ -124,8 +127,68 @@ function animate(){
 	render();
 }
 
+function initCtrl(){
+	var drag = false;
+	document.body.addEventListener("mousedown", function(){
+		drag = true;
+	});
+
+	document.body.addEventListener("mouseup", function(){
+		drag = false;
+	});
+	
+	document.body.addEventListener("mousemove", function(){
+		if(drag){
+			rotateCamera(event);
+		}
+	});
+
+	document.addEventListener("mousewheel", function(){
+		event.preventDefault();
+		zoomCamera(event);
+	});
+
+	document.body.addEventListener("keydown", function(){		
+		switch(event.code){
+			case "KeyW":
+				panCamera("y",4);
+				break;
+			case "KeyA":
+				panCamera("x", -2);
+				break;
+			case "KeyS":
+				panCamera("y",-2);
+				break;
+			case "KeyD":
+				panCamera("x", 2);
+				break;
+		}
+	});
+}
+
+function panCamera(dir, amount){
+	if(dir == "y"){
+		camera.position[dir] += amount;
+	}else if(dir == "x"){
+		camera.translateX( amount);
+	}
+}
+
+function rotateCamera(e){
+	var x = e.movementX;
+	var y = e.movementY;
+	
+	camera.rotation.y += Math.sin(-x*0.01);
+	camera.rotation.x += Math.sin(-y*0.01);
+}
+
+function zoomCamera(e){
+	camera.translateZ( - e.wheelDeltaY*0.1);
+}
+
 
 var scene = init();
+initCtrl();
 initPlane();
 addSphere();
 animate();
