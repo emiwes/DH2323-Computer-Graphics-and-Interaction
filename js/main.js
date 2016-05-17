@@ -39,7 +39,7 @@ function init(){
 	container.appendChild(renderer.domElement);
 
 
-	pointLight = new THREE.PointLight(0xFF00FF);
+	pointLight = new THREE.PointLight(0xFFFFFF);
 
 	// set its position
 	pointLight.position.set( 10, 50, 130);
@@ -50,7 +50,7 @@ function init(){
 	return scene;
 }
 
-function initPlane(){
+function initSurface(){
 	var geometry = new THREE.PlaneGeometry( 500, 500, 256, 256);
 	var texture = THREE.ImageUtils.loadTexture('img/water-texture.jpg');
 	texture.wrapS = THREE.RepeatWrapping;
@@ -60,7 +60,10 @@ function initPlane(){
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
-		side: THREE.DoubleSide, map: texture
+		side: THREE.DoubleSide, 
+		map: texture,
+		transparent: true,
+		opacity: 0.5
 	});
 
 	plane = new THREE.Mesh( geometry, material );
@@ -69,14 +72,37 @@ function initPlane(){
 	scene.add( plane );
 }
 
+function initBottom(){
+	var geometry = new THREE.PlaneGeometry( 500, 500, 2, 2);
+	var texture = THREE.ImageUtils.loadTexture('img/water-texture.jpg');
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4 );
+
+
+	var material = new THREE.MeshLambertMaterial({
+		color: 0xffffff,
+		side: THREE.DoubleSide, 
+		map: texture,
+		transparent: true,
+		opacity: 0.5
+	});
+
+	plane = new THREE.Mesh( geometry, material );
+
+	plane.rotation.x += (deg2rad(90));
+	scene.add( plane );
+}
+
+
 function addSphere(){
 	var sphereMaterial = new THREE.MeshLambertMaterial({
 		color: 0xCC0000
 	});
 
 	var radius = 50;
-	var segments = 16;
-	var rings = 16;
+	var segments = 32;
+	var rings = 32;
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
@@ -84,7 +110,7 @@ function addSphere(){
 }
 
 function render(){
-	step += 0.01;
+	step += 0.07;
 
 	// pointLight.position.y = Math.sin(step)*300; 
 	// pointLight.position.x = 75 - Math.cos(step)* 75; 
@@ -94,8 +120,9 @@ function render(){
 
 function animate(){
 	requestAnimationFrame(animate);
-	//define wave origine
-	var center = new THREE.Vector2(0,500);
+	//define wave origin
+	//v.z is local to the plane. due to rotation this corresponds to global y
+	var center = new THREE.Vector2(0,0);
 	var vLength = plane.geometry.vertices.length;
   	for (var i = 0; i < vLength; i++) {
 	    var v = plane.geometry.vertices[i];
@@ -105,12 +132,15 @@ function animate(){
 	    v.z = Math.sin(dist.length()/size + (step)) * magnitude;
 	}
 	plane.geometry.verticesNeedUpdate = true;
+	// animate floating ball
+	var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(center);
+	sphere.position.y =  Math.sin(dist.length()/size + 1 + (step)) * magnitude;
 	render();
 }
 
 
 var scene = init();
 initCtrl();
-initPlane();
+initSurface();
 addSphere();
 animate();
