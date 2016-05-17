@@ -32,7 +32,7 @@
 	<body>
 		<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> - webgl cube refraction demo. skybox by <a href="http://www.zfight.com/" target="_blank">Jochum Skoglund</a></div>
 
-		<script src="../git/js/three.js"></script>
+		<script src="../js/three.js"></script>
 
 
 		<script>
@@ -57,7 +57,9 @@
 				cameraCube = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 100000 );
 				scene = new THREE.Scene();
 				sceneCube = new THREE.Scene();
-				var geometry = new THREE.SphereBufferGeometry( 100, 32, 16 );
+				//var geometry = new THREE.SphereBufferGeometry( 100, 32, 16 );
+				var geometry = new THREE.BoxBufferGeometry( 100, 100, 100 );
+
 				var path = "../img/skybox/";
 				var format = '.jpg';
 				var urls = [
@@ -65,9 +67,13 @@
 					path + 'py' + format, path + 'ny' + format,
 					path + 'pz' + format, path + 'nz' + format
 				];
+				console.log(urls);
 				var textureCube = new THREE.CubeTextureLoader().load( urls );
+
+
+				initPlane();
 				textureCube.mapping = THREE.CubeRefractionMapping;
-				var material = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube, refractionRatio: 0.95 } );
+				var material = new THREE.MeshBasicMaterial( { color: 0xffffff, envMap: textureCube, refractionRatio: 0.1 } );
 				for ( var i = 0; i < 500; i ++ ) {
 					var mesh = new THREE.Mesh( geometry, material );
 					mesh.position.x = Math.random() * 10000 - 5000;
@@ -129,6 +135,29 @@
 				cameraCube.rotation.copy( camera.rotation );
 				renderer.render( sceneCube, cameraCube );
 				renderer.render( scene, camera );
+			}
+
+
+			function initPlane(){
+
+			  var geometry = new THREE.PlaneGeometry( 500, 500, 256, 256);
+			  var texture = THREE.ImageUtils.loadTexture('../img/water-texture.jpg');
+			  texture.wrapS = THREE.RepeatWrapping;
+			  texture.wrapT = THREE.RepeatWrapping;
+			  texture.repeat.set( 4, 4 );
+
+			  var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
+			  var plane = new THREE.Mesh( geometry, material );
+
+			  plane.rotation.x += (deg2rad(90));
+			  scene.add( plane );
+			  return plane;
+			}
+
+			function deg2rad(deg){
+			  var res = deg * (3.14 / 180);
+			  console.log(res);
+			  return res;
 			}
 		</script>
 
