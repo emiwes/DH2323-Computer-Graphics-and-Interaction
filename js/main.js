@@ -38,12 +38,8 @@ function init(){
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
 
-<<<<<<< HEAD
-	pointLight =
- 	new THREE.PointLight(0xFFFFFF);
-=======
+
 	pointLight = new THREE.PointLight(0xFF00FF);
->>>>>>> 8e84e168c5cf46102152eccb0686f1f7614dfe52
 
 	// set its position
 	pointLight.position.set( 10, 50, 130);
@@ -61,23 +57,16 @@ function initPlane(){
 	texture.wrapT = THREE.RepeatWrapping;
 	texture.repeat.set( 4, 4 );
 
-<<<<<<< HEAD
-	var material = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide, map: texture} );
-=======
+
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
 		side: THREE.DoubleSide, map: texture
 	});
 
->>>>>>> 8e84e168c5cf46102152eccb0686f1f7614dfe52
 	plane = new THREE.Mesh( geometry, material );
 
 	plane.rotation.x += (deg2rad(90));
 	scene.add( plane );
-<<<<<<< HEAD
-	return;
-=======
->>>>>>> 8e84e168c5cf46102152eccb0686f1f7614dfe52
 }
 
 function addSphere(){
@@ -96,15 +85,10 @@ function addSphere(){
 
 function render(){
 	step += 0.01;
-<<<<<<< HEAD
+
 	// pointLight.position.y = Math.sin(step)*300; 
 	// pointLight.position.x = 75 - Math.cos(step)* 75; 
 	
-=======
-	pointLight.position.y = Math.sin(step)*300;
-	pointLight.position.x = 75 - Math.cos(step)* 75;
->>>>>>> 8e84e168c5cf46102152eccb0686f1f7614dfe52
-
 	renderer.render(scene, camera);
 }
 
