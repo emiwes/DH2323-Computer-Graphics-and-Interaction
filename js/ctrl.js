@@ -4,6 +4,10 @@ function initCtrl(){
 		drag = true;
 	});
 
+	document.body.addEventListener("click", function(){
+		clickObject(event);
+	});
+
 	document.body.addEventListener("mouseup", function(){
 		drag = false;
 	});
@@ -17,7 +21,7 @@ function initCtrl(){
 	document.addEventListener("mousewheel", function(){
 		event.preventDefault();
 		zoomCamera(event);
-	});
+	}); 
 
 	document.body.addEventListener("keydown", function(){
 		switch(event.code){
@@ -41,7 +45,8 @@ function panCamera(dir, amount){
 	if(dir == "y"){
 		camera.position[dir] += amount;
 	}else if(dir == "x"){
-		camera.translateX( amount);
+		
+		camera.translateX(amount);
 	}
 }
 
@@ -56,3 +61,24 @@ function rotateCamera(e){
 function zoomCamera(e){
 	camera.translateZ( - e.wheelDeltaY*0.1);
 }
+
+function clickObject(e){
+	var mouseVector = new THREE.Vector3();
+	var raycaster = new THREE.Raycaster();
+
+	mouseVector.x = 2 * (e.clientX / WIDTH) - 1;
+  	mouseVector.y = 1 - 2 * ( e.clientY / HEIGHT );
+	raycaster.setFromCamera( mouseVector, camera );	
+	var intersects = raycaster.intersectObjects( SCENE.children );
+	console.log(intersects);
+	if(intersects[0].object.name == "waterSurface"){
+		console.log("clicked water")
+		EPICENTER.x = intersects[0].point.x;
+		EPICENTER.y = intersects[0].point.z;
+		STEP = 0;
+	}
+	// intersects[0].object.material.color.r = Math.random();
+	// intersects[0].object.material.color.g = Math.random();
+	// intersects[0].object.material.color.b = Math.random();
+}
+
