@@ -1,7 +1,14 @@
 function initCtrl(){
-	var drag = false;
+	var dragCamera = false;
+	var dragSphere = false;
 	document.body.addEventListener("mousedown", function(){
-		drag = true;
+		if(getTargetObject(event).object.name === "sphere"){
+			draggingObj = getTargetObject(event);
+			dragSphere = true;
+		}
+		else{
+			dragCamera = true;
+		}
 	});
 
 	document.body.addEventListener("click", function(){
@@ -9,19 +16,23 @@ function initCtrl(){
 	});
 
 	document.body.addEventListener("mouseup", function(){
-		drag = false;
+		dragCamera = false;
+		dragSphere = false;
 	});
 
 	document.body.addEventListener("mousemove", function(){
-		if(drag){
+		if( dragCamera ){
 			rotateCamera(event);
+		}
+		else if( dragSphere ){
+			translateSphere(event, draggingObj);
 		}
 	});
 
 	document.addEventListener("mousewheel", function(){
 		event.preventDefault();
 		zoomCamera(event);
-	}); 
+	});
 
 	document.body.addEventListener("keydown", function(){
 		switch(event.code){
@@ -43,10 +54,9 @@ function initCtrl(){
 
 function panCamera(dir, amount){
 	if(dir == "y"){
-		camera.position[dir] += amount;
+		CAMERA.position[dir] += amount;
 	}else if(dir == "x"){
-		
-		camera.translateX(amount);
+		CAMERA.translateX(amount);
 	}
 }
 
@@ -54,27 +64,20 @@ function rotateCamera(e){
 	var x = e.movementX;
 	var y = e.movementY;
 
-	camera.rotation.y += Math.sin(-x*0.01);
-	camera.rotation.x += Math.sin(-y*0.01);
+	CAMERA.rotation.y += Math.sin(-x*0.01);
+	CAMERA.rotation.x += Math.sin(-y*0.01);
 }
 
 function zoomCamera(e){
-	camera.translateZ( - e.wheelDeltaY*0.1);
+	CAMERA.translateZ( - e.wheelDeltaY*0.1);
 }
 
 function clickObject(e){
-	var mouseVector = new THREE.Vector3();
-	var raycaster = new THREE.Raycaster();
-
-	mouseVector.x = 2 * (e.clientX / WIDTH) - 1;
-  	mouseVector.y = 1 - 2 * ( e.clientY / HEIGHT );
-	raycaster.setFromCamera( mouseVector, camera );	
-	var intersects = raycaster.intersectObjects( SCENE.children );
-	console.log(intersects);
-	if(intersects[0].object.name == "waterSurface"){
-		console.log("clicked water")
-		EPICENTER.x = intersects[0].point.x;
-		EPICENTER.y = intersects[0].point.z;
+	console.log(e);
+	var intersectedObject = getTargetObject(e);
+	if( intersectedObject.object.name == "waterSurface" ){
+		EPICENTER.x = intersectedObject.point.x;
+		EPICENTER.y = intersectedObject.point.z;
 		STEP = 0;
 	}
 	// intersects[0].object.material.color.r = Math.random();
@@ -82,3 +85,22 @@ function clickObject(e){
 	// intersects[0].object.material.color.b = Math.random();
 }
 
+function getTargetObject(e){
+	var mouseVector = new THREE.Vector3();
+	var raycaster = new THREE.Raycaster();
+
+	mouseVector.x = 2 * (e.clientX / WIDTH) - 1;
+  	mouseVector.y = 1 - 2 * ( e.clientY / HEIGHT );
+	raycaster.setFromCamera( mouseVector, CAMERA );
+	var intersects = raycaster.intersectObjects( SCENE.children );
+	console.log(intersects);
+	return intersects[0];
+}
+
+function translateSphere(e, sphere){
+	var mouseX = e.movementX;
+	var mouseY = e.movementY;
+
+	sphere.object.position.x += mouseX;
+	sphere.object.position.z += mouseY;
+}

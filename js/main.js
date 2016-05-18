@@ -11,33 +11,20 @@ function deg2rad(deg){
 }
 
 function init(){
-	// set some camera attributes
-	var VIEW_ANGLE = 45,
-	  ASPECT = WIDTH / HEIGHT,
-	  NEAR = 0.1,
-	  FAR = 10000;
-
 	// create a WebGL renderer, camera
 	// and a SCENE;
-	camera =
-	  new THREE.PerspectiveCamera(
-	    VIEW_ANGLE,
-	    ASPECT,
-	    NEAR,
-	    FAR);
-
+	CAMERA = new THREE.PerspectiveCamera( 45, WIDTH/HEIGHT, 0.1, 10000);
 	SCENE = new THREE.Scene();
-	SCENE.add(camera);
 
 	// the camera starts at 0,0,0
 	// so pull it back
-	camera.position.set( 0, 100, 300 );
-	camera.rotation.x += 50;
+	CAMERA.position.set( 0, 100, 300 );
+	CAMERA.rotation.x += 50;
+	SCENE.add(CAMERA);
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
-
 
 	pointLight = new THREE.PointLight(0xFFFFFF);
 
@@ -60,7 +47,7 @@ function initSurface(){
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
-		side: THREE.DoubleSide, 
+		side: THREE.DoubleSide,
 		map: texture,
 		transparent: true,
 		opacity: 0.5
@@ -79,7 +66,7 @@ function initBottom(){
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
-		side: THREE.DoubleSide, 
+		side: THREE.DoubleSide,
 		map: texture
 	});
 
@@ -125,6 +112,7 @@ function addSphere(){
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	sphere.userData = {"yVelocity": 0};
+	sphere.name = "sphere";
 	SCENE.add(sphere);
 }
 
@@ -153,10 +141,10 @@ function render(){
 
 	STEP += 0.07;
 
-	// pointLight.position.y = Math.sin(STEP)*300; 
-	// pointLight.position.x = 75 - Math.cos(STEP)* 75; 
-	
-	renderer.render(SCENE, camera);
+	// pointLight.position.y = Math.sin(STEP)*300;
+	// pointLight.position.x = 75 - Math.cos(STEP)* 75;
+
+	renderer.render(SCENE, CAMERA);
 }
 
 function animate(){
@@ -167,18 +155,21 @@ function animate(){
 	var size = 5.0;
 	var decay = 0.1;
 	var vLength = plane.geometry.vertices.length;
-	//if (STEP < magnitude/decay){
+	if (STEP < magnitude/decay){
 	  	for (var i = 0; i < vLength; i++) {
 		    var v = plane.geometry.vertices[i];
-		    var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTER);		    
+		    var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTER);
 			v.z = Math.sin(dist.length()/size - STEP) * (magnitude - STEP*decay);
 		}
 	// animate floating ball
+
 	// var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(EPICENTER);		
 	// sphere.position.y =  Math.sin((dist.length())/size - (STEP)) * (magnitude - STEP*decay);
 	sphere.position.y += sphere.userData.yVelocity;
 	floating(sphere);
-	//}
+
+	}
+
 
 	plane.geometry.verticesNeedUpdate = true;
 	render();
