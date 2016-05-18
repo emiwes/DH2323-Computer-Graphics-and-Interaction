@@ -1,8 +1,8 @@
 var container = document.getElementById("render");
-var WIDTH = window.innerWidth;
-var HEIGHT = window.innerHeight;
-
-var step = 0;
+WIDTH = window.innerWidth;
+HEIGHT = window.innerHeight;
+EPICENTER = new THREE.Vector2(0,0);
+STEP = 0;
 
 function deg2rad(deg){
 	var res = deg * (3.14 / 180);
@@ -18,7 +18,7 @@ function init(){
 	  FAR = 10000;
 
 	// create a WebGL renderer, camera
-	// and a scene;
+	// and a SCENE;
 	camera =
 	  new THREE.PerspectiveCamera(
 	    VIEW_ANGLE,
@@ -26,8 +26,8 @@ function init(){
 	    NEAR,
 	    FAR);
 
-	scene = new THREE.Scene();
-	scene.add(camera);
+	SCENE = new THREE.Scene();
+	SCENE.add(camera);
 
 	// the camera starts at 0,0,0
 	// so pull it back
@@ -42,12 +42,12 @@ function init(){
 	pointLight = new THREE.PointLight(0xFFFFFF);
 
 	// set its position
-	pointLight.position.set( 10, 50, 130);
-	scene.add(pointLight);
+	pointLight.position.set( 10, 250, 130);
+	SCENE.add(pointLight);
 
 	ambLight = new THREE.AmbientLight(0x333333);
- 	scene.add(ambLight);
-	return scene;
+ 	SCENE.add(ambLight);
+	return SCENE;
 }
 
 function initSurface(){
@@ -67,18 +67,15 @@ function initSurface(){
 	});
 
 	plane = new THREE.Mesh( geometry, material );
+	plane.name = "waterSurface";
 
 	plane.rotation.x += (deg2rad(90));
-	scene.add( plane );
+	SCENE.add( plane );
 }
 
 function initBottom(){
 	var geometry = new THREE.PlaneGeometry( 500, 500, 1, 1);
 	var texture = THREE.ImageUtils.loadTexture('img/sand-texture.jpg');
-	texture.wrapS = THREE.RepeatWrapping;
-	texture.wrapT = THREE.RepeatWrapping;
-	texture.repeat.set( 4, 4 );
-
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
@@ -90,29 +87,8 @@ function initBottom(){
 
 	plane.rotation.x += (deg2rad(90));
 	plane.position.y = -100;
-	scene.add( plane );
+	SCENE.add( plane );
 }
-
-
-function initBottom(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 2, 2);
-	var texture = THREE.ImageUtils.loadTexture('img/sand-texture.jpg');
-
-	var material = new THREE.MeshLambertMaterial({
-		color: 0xffffff,
-		side: THREE.DoubleSide, 
-		map: texture,
-		transparent: true,
-		opacity: 0.5
-	});
-
-	var plane = new THREE.Mesh( geometry, material );
-
-	plane.rotation.x += (deg2rad(90));
-	plane.position.y -=100;
-	scene.add( plane );
-}
-
 
 function addSphere(){
 	var sphereMaterial = new THREE.MeshLambertMaterial({
@@ -125,40 +101,43 @@ function addSphere(){
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	scene.add(sphere);
+	SCENE.add(sphere);
 }
 
 function render(){
-	step += 0.07;
+	STEP += 0.07;
 
-	// pointLight.position.y = Math.sin(step)*300; 
-	// pointLight.position.x = 75 - Math.cos(step)* 75; 
+	// pointLight.position.y = Math.sin(STEP)*300; 
+	// pointLight.position.x = 75 - Math.cos(STEP)* 75; 
 	
-	renderer.render(scene, camera);
+	renderer.render(SCENE, camera);
 }
 
 function animate(){
 	requestAnimationFrame(animate);
 	//define wave origin
 	//v.z is local to the plane. due to rotation this corresponds to global y
-	var center = new THREE.Vector2(0,0);
+	var magnitude = 7.0;
+	var size = 10.0;
+	var decay = 0.1;
 	var vLength = plane.geometry.vertices.length;
-  	for (var i = 0; i < vLength; i++) {
-	    var v = plane.geometry.vertices[i];
-	    var dist = new THREE.Vector2(v.x, v.y).sub(center);
-	    var size = 10.0;
-	    var magnitude = 5.0;
-	    v.z = Math.sin(dist.length()/size + (step)) * magnitude;
-	}
-	plane.geometry.verticesNeedUpdate = true;
+	if (STEP < magnitude/decay){
+	  	for (var i = 0; i < vLength; i++) {
+		    var v = plane.geometry.vertices[i];
+		    var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTER);		    
+			v.z = Math.sin(dist.length()/size - STEP) * (magnitude - STEP*decay);
+		}
 	// animate floating ball
-	var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(center);
-	sphere.position.y =  Math.sin(dist.length()/size + 1 + (step)) * magnitude;
+	var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(EPICENTER);		
+	sphere.position.y =  Math.sin((dist.length())/size - (STEP)) * (magnitude - STEP*decay);
+	}
+
+	plane.geometry.verticesNeedUpdate = true;
 	render();
 }
 
 
-var scene = init();
+var SCENE = init();
 initCtrl();
 initSurface();
 initBottom();
