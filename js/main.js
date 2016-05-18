@@ -73,12 +73,30 @@ function initSurface(){
 }
 
 function initBottom(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 2, 2);
-	var texture = THREE.ImageUtils.loadTexture('img/water-texture.jpg');
+	var geometry = new THREE.PlaneGeometry( 500, 500, 1, 1);
+	var texture = THREE.ImageUtils.loadTexture('img/sand-texture.jpg');
 	texture.wrapS = THREE.RepeatWrapping;
 	texture.wrapT = THREE.RepeatWrapping;
 	texture.repeat.set( 4, 4 );
 
+
+	var material = new THREE.MeshLambertMaterial({
+		color: 0xffffff,
+		side: THREE.DoubleSide, 
+		map: texture
+	});
+
+	var plane = new THREE.Mesh( geometry, material );
+
+	plane.rotation.x += (deg2rad(90));
+	plane.position.y = -100;
+	scene.add( plane );
+}
+
+
+function initBottom(){
+	var geometry = new THREE.PlaneGeometry( 500, 500, 2, 2);
+	var texture = THREE.ImageUtils.loadTexture('img/sand-texture.jpg');
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
@@ -88,9 +106,10 @@ function initBottom(){
 		opacity: 0.5
 	});
 
-	plane = new THREE.Mesh( geometry, material );
+	var plane = new THREE.Mesh( geometry, material );
 
 	plane.rotation.x += (deg2rad(90));
+	plane.position.y -=100;
 	scene.add( plane );
 }
 
@@ -142,5 +161,6 @@ function animate(){
 var scene = init();
 initCtrl();
 initSurface();
+initBottom();
 addSphere();
 animate();
