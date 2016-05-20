@@ -2,7 +2,7 @@ var container = document.getElementById("render");
 WIDTH = window.innerWidth;
 HEIGHT = window.innerHeight;
 EPICENTER = new THREE.Vector2(0,0);
-STEP = 0;
+STEP = 10000;
 
 function deg2rad(deg){
 	var res = deg * (3.14 / 180);
@@ -38,11 +38,11 @@ function init(){
 }
 
 function initSurface(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 256, 256);
-	var texture = THREE.ImageUtils.loadTexture('img/water-texture.jpg');
-	texture.wrapS = THREE.RepeatWrapping;
-	texture.wrapT = THREE.RepeatWrapping;
-	texture.repeat.set( 4, 4 );
+	var geometry = new THREE.PlaneGeometry( 500, 500, 128, 128);
+	var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
+	// texture.wrapS = THREE.RepeatWrapping;
+	// texture.wrapT = THREE.RepeatWrapping;
+	// texture.repeat.set( 4, 4 );
 
 
 	var material = new THREE.MeshLambertMaterial({
@@ -113,6 +113,7 @@ function addSphere(){
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	sphere.userData = {"yVelocity": 0};
 	sphere.name = "sphere";
+	sphere.position.y = 20;
 	SCENE.add(sphere);
 }
 
@@ -126,19 +127,40 @@ function floating(obj){
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );	
 	var above = raycaster.intersectObjects( SCENE.children );
 	var yDiff = 0;
+	//var v0 = sphere.userData.yVelocity;
+	obj.userData.yVelocity -= 0.098;
 	if(under[0].object.name == "waterSurface"){
-		//yDiff = -under[0].distance;
-		obj.userData.yVelocity -= 0.05;
+		yDiff = -under[0].distance;
+		//obj.userData.yVelocity -= 0.098;
 	}else if(above[0].object.name == "waterSurface"){
-		//yDiff = above[0].distance;
-		obj.userData.yVelocity += 0.02;
+		yDiff = above[0].distance;
+		var r = sphere.geometry.parameters.radius;
+
+		// if(yDiff < r && sphere.userData.yVelocity < -1){
+		// 		EPICENTER.x = sphere.poistion.x;
+		// 		EPICENTER.y = sphere.position.z;
+		// 		STEP = 0;
+		// }
+		
+		
+		var h = 2*r;
+		if(yDiff < 2*r) {
+			var h = yDiff;
+		}
+		//volume of sphere cap?
+		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
+		//var volSubmerged = h/r;
+		obj.userData.yVelocity += 0.098*volSubmerged;
+		if (obj.userData.yVelocity > 0.3){
+			obj.userData.yVelocity = 0.3;
+
+		}
 	}
 	//obj.userData.yVelocity += yDiff*0.1;
 
 }
 
 function render(){
-
 	STEP += 0.07;
 
 	// pointLight.position.y = Math.sin(STEP)*300;
@@ -159,16 +181,17 @@ function animate(){
 	  	for (var i = 0; i < vLength; i++) {
 		    var v = plane.geometry.vertices[i];
 		    var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTER);
-			v.z = Math.sin(dist.length()/size - STEP) * (magnitude - STEP*decay);
+			v.z = Math.cos(dist.length()/size - STEP) * (magnitude - STEP*decay);
 		}
 	// animate floating ball
 
 	// var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(EPICENTER);		
 	// sphere.position.y =  Math.sin((dist.length())/size - (STEP)) * (magnitude - STEP*decay);
-	sphere.position.y += sphere.userData.yVelocity;
-	floating(sphere);
+	
 
 	}
+	sphere.position.y += sphere.userData.yVelocity;
+	floating(sphere);
 
 
 	plane.geometry.verticesNeedUpdate = true;
@@ -183,3 +206,5 @@ initSurface();
 initBottom();
 addSphere();
 animate();
+
+
