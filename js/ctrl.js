@@ -76,9 +76,13 @@ function clickObject(e){
 	console.log(e);
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
-		EPICENTER.x = intersectedObject.point.x;
-		EPICENTER.y = intersectedObject.point.z;
-		STEP = 0;
+		var position =  new THREE.Vector2(intersectedObject.point.x, intersectedObject.point.z);
+		var mag = 3.0;
+		var wL = mag*3;
+		var epi = new Epicenter(mag, 0.1, wL, position);
+		EPICENTERS.push(epi);
+		//console.log(EPICENTERS);
+		// STEP = 0;
 	}
 	// intersects[0].object.material.color.r = Math.random();
 	// intersects[0].object.material.color.g = Math.random();

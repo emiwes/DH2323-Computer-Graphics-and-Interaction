@@ -1,8 +1,15 @@
 var container = document.getElementById("render");
 WIDTH = window.innerWidth;
 HEIGHT = window.innerHeight;
-EPICENTER = new THREE.Vector2(0,0);
-STEP = 10000;
+
+// EPICENTER = new THREE.Vector2(0,0);
+EPICENTERS = [];
+STEP = new THREE.Clock();
+// STEP = 0;
+var stats = new Stats();
+stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom );
+
 
 function deg2rad(deg){
 	var res = deg * (3.14 / 180);
@@ -38,12 +45,11 @@ function init(){
 }
 
 function initSurface(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 128, 128);
+	var geometry = new THREE.PlaneGeometry( 500, 500, 96, 96);
 	var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
 	// texture.wrapS = THREE.RepeatWrapping;
 	// texture.wrapT = THREE.RepeatWrapping;
 	// texture.repeat.set( 4, 4 );
-
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
@@ -122,9 +128,9 @@ function floating(obj){
 	var objPosition = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
 	var raycaster = new THREE.Raycaster();
 
-	raycaster.set( objPosition, new THREE.Vector3(0,-1,0) );	
+	raycaster.set( objPosition, new THREE.Vector3(0,-1,0) );
 	var under = raycaster.intersectObjects( SCENE.children );
-	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );	
+	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
 	var above = raycaster.intersectObjects( SCENE.children );
 	var yDiff = 0;
 	//var v0 = sphere.userData.yVelocity;
@@ -161,7 +167,9 @@ function floating(obj){
 }
 
 function render(){
-	STEP += 0.07;
+
+
+	// STEP += 0.07;
 
 	// pointLight.position.y = Math.sin(STEP)*300;
 	// pointLight.position.x = 75 - Math.cos(STEP)* 75;
@@ -171,30 +179,36 @@ function render(){
 
 function animate(){
 	requestAnimationFrame(animate);
+	stats.begin();
 	//define wave origin
 	//v.z is local to the plane. due to rotation this corresponds to global y
-	var magnitude = 3.0;
-	var size = 5.0;
-	var decay = 0.1;
+	// var magnitude = 3.0;
+	// var size = 5.0;
+	// var decay = 0.1;
 	var vLength = plane.geometry.vertices.length;
-	if (STEP < magnitude/decay){
-	  	for (var i = 0; i < vLength; i++) {
-		    var v = plane.geometry.vertices[i];
-		    var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTER);
-			v.z = Math.cos(dist.length()/size - STEP) * (magnitude - STEP*decay);
+
+  	for (var i = 0; i < vLength; i++) {
+	    var v = plane.geometry.vertices[i];
+		v.z = 0;
+		for(var j in EPICENTERS){
+			var wavelength = EPICENTERS[j].wavelength;
+			var decay = EPICENTERS[j].decay;
+			var deltaStep = STEP.getElapsedTime() - EPICENTERS[j].startTime;
+			var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
+			var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTERS[j].position).length();
+			deltaStep*=5;
+			var wavefront = deltaStep*wavelength;
+			if(dist < wavefront){
+				magnitude /= deltaStep*decay;
+				v.z += Math.sin(dist/wavelength - deltaStep+3.14) * magnitude;
+			}
 		}
-	// animate floating ball
-
-	// var dist = new THREE.Vector2(sphere.position.x, sphere.position.z).sub(EPICENTER);		
-	// sphere.position.y =  Math.sin((dist.length())/size - (STEP)) * (magnitude - STEP*decay);
-	
-
 	}
 	sphere.position.y += sphere.userData.yVelocity;
 	floating(sphere);
 
-
 	plane.geometry.verticesNeedUpdate = true;
+	stats.end();
 	render();
 }
 
