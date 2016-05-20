@@ -139,12 +139,13 @@ function floating(obj){
 	if(under[0].object.name == "waterSurface"){
 		yDiff = under[0].distance;
 		//obj.userData.yVelocity -= 0.098;
+		//detect sphere impact
 		if(yDiff-r < r && sphere.userData.yVelocity < -1){
 				var position = new THREE.Vector2(sphere.position.x, sphere.position.z);
 				var h = yDiff-r;
 				var mag = h;//sphere.geomerty.parameters.radius;
 				var wavelength = mag*3;
-				var decay = 0.1;
+				var decay = 0.5;
 				var epi = new Epicenter(mag, decay, wavelength, position);
 				EPICENTERS.push(epi);
 		}
@@ -164,8 +165,8 @@ function floating(obj){
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
 		//var volSubmerged = h/r;
 		obj.userData.yVelocity += 0.005*volSubmerged;
-		if (obj.userData.yVelocity > 0.3){
-			obj.userData.yVelocity = 0.3;
+		if (obj.userData.yVelocity > 0.4){
+			obj.userData.yVelocity = 0.4;
 		}
 	}
 	//obj.userData.yVelocity += yDiff*0.1;
@@ -201,14 +202,18 @@ function animate(){
 		deltaStep*=5;
 		
 		var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
-		var wavefront = deltaStep*wavelength + wavelength;
+		var wavefront = deltaStep*wavelength;// + wavelength;
 
   		for (var i = 0; i < vLength; i++) {
 		    var v = plane.geometry.vertices[i];
 			var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTERS[j].position).length();
 			if(dist < wavefront){
-				var vmagnitude = magnitude*(dist/wavefront);
-				v.z += Math.sin(dist/wavelength - deltaStep + 3.14) * vmagnitude;
+				var vmagnitude = (magnitude*(dist/wavefront*decay));
+				if(vmagnitude < 0.001 && deltaStep > 100){
+					EPICENTERS.splice(j,1);
+					break;
+				}
+				v.z += Math.sin(dist/wavelength - deltaStep) * vmagnitude;
 			}
 		}
 	}
