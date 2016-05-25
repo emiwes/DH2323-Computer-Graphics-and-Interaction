@@ -8,6 +8,7 @@ EPICENTERS = [];
 STEP = new THREE.Clock();
 // STEP = 0;
 var stats = new Stats();
+var ms_Water;
 stats.showPanel( 1 ); // 0: fps, 1: ms, 2: mb, 3+: custom
 document.body.appendChild( stats.dom );
 
@@ -28,42 +29,87 @@ function init(){
 	// so pull it back
 	CAMERA.position.set( 0, 100, 300 );
 	CAMERA.rotation.x += 50;
+	// CAMERA.lookAt(new THREE.Vector3(0,0,0));
 	SCENE.add(CAMERA);
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
 
-	pointLight = new THREE.PointLight(0xFFFFFF);
+	pointLight = new THREE.DirectionalLight(0xffff55, 1);
 
 	// set its position
-	pointLight.position.set( 10, 250, 130);
+	pointLight.position.set( -600, 300, 600);
 	SCENE.add(pointLight);
 
-	ambLight = new THREE.AmbientLight(0x333333);
- 	SCENE.add(ambLight);
+	// ambLight = new THREE.AmbientLight(0x333333);
+ 	// SCENE.add(ambLight);
 	return SCENE;
 }
 
 function initSurface(){
 	var geometry = new THREE.PlaneGeometry( 500, 500, 96, 96);
-	var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
+	// var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
 	// texture.wrapS = THREE.RepeatWrapping;
 	// texture.wrapT = THREE.RepeatWrapping;
 	// texture.repeat.set( 4, 4 );
 
-	var material = new THREE.MeshLambertMaterial({
-		color: 0xffffff,
-		side: THREE.DoubleSide,
-		map: texture,
-		transparent: true,
-		opacity: 0.5
+
+	var waterN = new THREE.ImageUtils.loadTexture("img/waternormals.jpg");
+	waterN.wrapS = waterN.wrapT = THREE.RepeatWrapping;
+
+	ms_Water = new THREE.Water(renderer, CAMERA, SCENE, {
+		textureWidth: 256
+		, textureHeight: 256
+		, alpha: 1.0
+		, sunDirection: pointLight.position.normalize()
+		, sunColor: 0xffffff
+		, waterNormals: waterN
+		, waterColor: 0x001e0f
+		, betaVersion: 0
+		, side: THREE.DoubleSide
 	});
 
-	plane = new THREE.Mesh( geometry, material );
+	// var material = new THREE.MeshLambertMaterial({
+	// 	color: 0xffffff,
+	// 	side: THREE.DoubleSide,
+	// 	map: texture,
+	// 	transparent: true,
+	// 	opacity: 0.5
+	// });
+
+	// console.log("MirrorShader");
+
+
+	// var mirrorShader = THREE.ShaderLib["MirrorShader"];
+	// var mirrorShader = THREE.ShaderLib["cube"];
+	// mirrorShader.uniforms[ "tCube" ].value = textureCube;
+	// var material = new THREE.ShaderMaterial({
+	// 	// fragmentShader: mirrorShader.fragmentShader
+	// 	// , vertexShader: mirrorShader.vertexShader
+	// 	// , opacity: 0.5
+	// 	// , side: THREE.DoubleSide
+	// 	fragmentShader: mirrorShader.fragmentShader,
+	// 	vertexShader: mirrorShader.vertexShader,
+	// 	uniforms: mirrorShader.uniforms,
+	// 	depthWrite: false,
+	// 	side: THREE.DoubleSide
+	// });
+
+	// var shader = THREE.ShaderLib["test"];
+
+	// var material = new THREE.ShaderMaterial({
+	// 	fragmentShader: shader.fragmentShader
+	// 	, vertexShader: shader.vertexShader
+	// 	, side: THREE.DoubleSide
+	// })
+
+	plane = new THREE.Mesh( geometry, ms_Water.material );
+	plane.add(ms_Water);
 	plane.name = "waterSurface";
 
 	plane.rotation.x += (deg2rad(90));
+	// plane.rotation.x = Math.PI * 0.5;
 	SCENE.add( plane );
 }
 
@@ -93,7 +139,7 @@ function initSkyBox(){
 		path + 'pz' + format, path + 'nz' + format
 	];
 
-	var textureCube = new THREE.CubeTextureLoader().load( urls );
+	textureCube = new THREE.CubeTextureLoader().load( urls );
 	var shader = THREE.ShaderLib[ "cube" ];
 	shader.uniforms[ "tCube" ].value = textureCube;
 	var material = new THREE.ShaderMaterial( {
@@ -211,11 +257,14 @@ function render(){
 function animate(){
 	requestAnimationFrame(animate);
 	stats.begin();
+	// console.dir(plane);
 	var vLength = plane.geometry.vertices.length;
 
 	for (var i = 0; i < vLength; i++) {
 		//v.z is local to the plane. due to rotation this corresponds to global y
 	    var v = plane.geometry.vertices[i];
+	   //.geometry.attributes.position.array[i*3+1];
+	    // console.log(v);
 		v.z = 0;
 	}
 
@@ -237,7 +286,10 @@ function animate(){
 					EPICENTERS.splice(j,1);
 					break;
 				}
+
+
 				v.z += Math.sin(dist/wavelength - deltaStep) * vmagnitude;
+
 			}
 		}
 	}
@@ -250,15 +302,18 @@ function animate(){
 
 	plane.geometry.verticesNeedUpdate = true;
 	stats.end();
+
+	ms_Water.render();
 	render();
 }
 
 
+
 var SCENE = init();
-initSkyBox();
 initCtrl();
-initSurface();
 initBottom();
 addSphere();
-addRainDrops(10);
+addRainDrops(0);
+initSurface();
+initSkyBox();
 animate();
