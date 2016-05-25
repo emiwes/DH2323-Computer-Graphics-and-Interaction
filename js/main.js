@@ -47,16 +47,24 @@ function init(){
 function initSurface(){
 	var geometry = new THREE.PlaneGeometry( 500, 500, 96, 96);
 	var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
-	// texture.wrapS = THREE.RepeatWrapping;
-	// texture.wrapT = THREE.RepeatWrapping;
-	// texture.repeat.set( 4, 4 );
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	texture.repeat.set( 4, 4 );
 
-	var material = new THREE.MeshLambertMaterial({
-		color: 0xffffff,
-		side: THREE.DoubleSide,
-		map: texture,
+	// var material = new THREE.MeshLambertMaterial({
+	// 	color: 0xffffff,
+	// 	side: THREE.DoubleSide,
+	// 	map: texture,
+	// 	transparent: true,
+	// 	opacity: 0.5
+	// });
+
+	var mirrorShader = THREE.ShaderLib["cube"];
+	var material = new THREE.ShaderMaterial({ 
+		fragmentShader: mirrorShader.fragmentShader, 
+		vertexShader: mirrorShader.vertexShader, 
 		transparent: true,
-		opacity: 0.5
+		side: THREE.DoubleSide
 	});
 
 	plane = new THREE.Mesh( geometry, material );
