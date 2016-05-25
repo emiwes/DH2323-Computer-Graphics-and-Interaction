@@ -83,8 +83,10 @@ function clickObject(e){
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
 		var position =  new THREE.Vector2(intersectedObject.point.x, intersectedObject.point.z);
-		var mag = 5.0;
-		var wavelength = mag*3;
+		var mag = Math.floor(Math.random() * 10) + 1;
+		// var mag = 6.0;
+		var randomWaveLengthFactor = Math.floor(Math.random() * 10) + 1;
+		var wavelength = mag*randomWaveLengthFactor;
 		var decay = 1;
 		var epi = new Epicenter(mag, decay, wavelength, position);
 		EPICENTERS.push(epi);

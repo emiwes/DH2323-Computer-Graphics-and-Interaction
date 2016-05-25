@@ -1,6 +1,7 @@
 var container = document.getElementById("render");
 WIDTH = window.innerWidth;
 HEIGHT = window.innerHeight;
+RAINDROPS = [];
 
 // EPICENTER = new THREE.Vector2(0,0);
 EPICENTERS = [];
@@ -123,6 +124,29 @@ function addSphere(){
 	SCENE.add(sphere);
 }
 
+function addRainDrops(amount){
+	for(var i = 0; i < amount; i++){
+		var rainDropMaterial = new THREE.MeshLambertMaterial({
+			color: 0xFFFFFF
+		});
+		var radius = 5;
+		var segments = 4;
+		var rings = 4;
+
+		var rainDropGeometry = new THREE.SphereGeometry( radius, segments, rings);
+		rainDrop = new THREE.Mesh( rainDropGeometry, rainDropMaterial );
+		rainDrop.userData = {"yVelocity":0};
+		rainDrop.name = "rainDrop";
+		rainDrop.position.y = 100;
+		var max = 250;
+		var min = -250;
+		rainDrop.position.x = Math.random() * (max - min) + min;
+		rainDrop.position.z = Math.random() * (max - min) + min;
+		RAINDROPS.push(rainDrop);
+		SCENE.add(rainDrop);
+	}
+}
+
 
 function floating(obj){
 	var objPosition = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
@@ -133,17 +157,17 @@ function floating(obj){
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
 	var above = raycaster.intersectObjects( SCENE.children );
 	var yDiff = 0;
-	var r = sphere.geometry.parameters.radius;
-	//var v0 = sphere.userData.yVelocity;
+	var r = obj.geometry.parameters.radius;
+	//var v0 = obj.userData.yVelocity;
 	obj.userData.yVelocity -= 0.098;
 	if(under[0].object.name == "waterSurface"){
 		yDiff = under[0].distance;
 		//obj.userData.yVelocity -= 0.098;
-		//detect sphere impact
-		if(yDiff-r < r && sphere.userData.yVelocity < -1){
-				var position = new THREE.Vector2(sphere.position.x, sphere.position.z);
+		//detect obj impact
+		if(yDiff-r < r && obj.userData.yVelocity < -1){
+				var position = new THREE.Vector2(obj.position.x, obj.position.z);
 				var h = yDiff-r;
-				var mag = h;//sphere.geomerty.parameters.radius;
+				var mag = h;//obj.geomerty.parameters.radius;
 				var wavelength = mag*3;
 				var decay = 0.5;
 				var epi = new Epicenter(mag, decay, wavelength, position);
@@ -152,16 +176,16 @@ function floating(obj){
 
 	}else if(above[0].object.name == "waterSurface"){
 		yDiff = above[0].distance;
-		
 
 
-		
-		
+
+
+
 		var h = 2*r;
 		if(yDiff < 2*r) {
 			var h = yDiff;
 		}
-		//volume of sphere cap?
+		//volume of obj cap?
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
 		//var volSubmerged = h/r;
 		obj.userData.yVelocity += 0.005*volSubmerged;
@@ -200,7 +224,7 @@ function animate(){
 		var decay = EPICENTERS[j].decay;
 		var deltaStep = STEP.getElapsedTime() - EPICENTERS[j].startTime;
 		deltaStep*=5;
-		
+
 		var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
 		var wavefront = deltaStep*wavelength;// + wavelength;
 
@@ -218,6 +242,10 @@ function animate(){
 		}
 	}
 	sphere.position.y += sphere.userData.yVelocity;
+	for(var k in RAINDROPS){
+		RAINDROPS[k].position.y += RAINDROPS[k].userData.yVelocity;
+		floating(RAINDROPS[k]);
+	}
 	floating(sphere);
 
 	plane.geometry.verticesNeedUpdate = true;
@@ -232,6 +260,5 @@ initCtrl();
 initSurface();
 initBottom();
 addSphere();
+addRainDrops(10);
 animate();
-
-
