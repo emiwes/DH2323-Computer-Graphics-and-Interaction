@@ -127,7 +127,7 @@ function addSphere(){
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	sphere.userData = {"yVelocity": 0};
 	sphere.name = "sphere";
-	sphere.position.y = 20;
+	sphere.position.y = 50;
 	SCENE.add(sphere);
 }
 
@@ -141,20 +141,28 @@ function floating(obj){
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
 	var above = raycaster.intersectObjects( SCENE.children );
 	var yDiff = 0;
+	var r = sphere.geometry.parameters.radius;
 	//var v0 = sphere.userData.yVelocity;
 	obj.userData.yVelocity -= 0.098;
 	if(under[0].object.name == "waterSurface"){
-		yDiff = -under[0].distance;
+		yDiff = under[0].distance;
 		//obj.userData.yVelocity -= 0.098;
+		//detect sphere impact
+		if(yDiff-r < r && sphere.userData.yVelocity < -1){
+				var position = new THREE.Vector2(sphere.position.x, sphere.position.z);
+				var h = yDiff-r;
+				var mag = h;//sphere.geomerty.parameters.radius;
+				var wavelength = mag*3;
+				var decay = 0.5;
+				var epi = new Epicenter(mag, decay, wavelength, position);
+				EPICENTERS.push(epi);
+		}
+
 	}else if(above[0].object.name == "waterSurface"){
 		yDiff = above[0].distance;
-		var r = sphere.geometry.parameters.radius;
+		
 
-		// if(yDiff < r && sphere.userData.yVelocity < -1){
-		// 		EPICENTER.x = sphere.poistion.x;
-		// 		EPICENTER.y = sphere.position.z;
-		// 		STEP = 0;
-		// }
+
 		
 		
 		var h = 2*r;
@@ -164,10 +172,9 @@ function floating(obj){
 		//volume of sphere cap?
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
 		//var volSubmerged = h/r;
-		obj.userData.yVelocity += 0.098*volSubmerged;
-		if (obj.userData.yVelocity > 0.3){
-			obj.userData.yVelocity = 0.3;
-
+		obj.userData.yVelocity += 0.005*volSubmerged;
+		if (obj.userData.yVelocity > 0.4){
+			obj.userData.yVelocity = 0.4;
 		}
 	}
 	//obj.userData.yVelocity += yDiff*0.1;
@@ -188,27 +195,33 @@ function render(){
 function animate(){
 	requestAnimationFrame(animate);
 	stats.begin();
-	//define wave origin
-	//v.z is local to the plane. due to rotation this corresponds to global y
-	// var magnitude = 3.0;
-	// var size = 5.0;
-	// var decay = 0.1;
 	var vLength = plane.geometry.vertices.length;
 
-  	for (var i = 0; i < vLength; i++) {
+	for (var i = 0; i < vLength; i++) {
+		//v.z is local to the plane. due to rotation this corresponds to global y
 	    var v = plane.geometry.vertices[i];
 		v.z = 0;
-		for(var j in EPICENTERS){
-			var wavelength = EPICENTERS[j].wavelength;
-			var decay = EPICENTERS[j].decay;
-			var deltaStep = STEP.getElapsedTime() - EPICENTERS[j].startTime;
-			var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
+	}
+
+	for(var j in EPICENTERS){
+		var wavelength = EPICENTERS[j].wavelength;
+		var decay = EPICENTERS[j].decay;
+		var deltaStep = STEP.getElapsedTime() - EPICENTERS[j].startTime;
+		deltaStep*=5;
+		
+		var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
+		var wavefront = deltaStep*wavelength;// + wavelength;
+
+  		for (var i = 0; i < vLength; i++) {
+		    var v = plane.geometry.vertices[i];
 			var dist = new THREE.Vector2(v.x, v.y).sub(EPICENTERS[j].position).length();
-			deltaStep*=5;
-			var wavefront = deltaStep*wavelength;
 			if(dist < wavefront){
-				magnitude /= deltaStep*decay;
-				v.z += Math.sin(dist/wavelength - deltaStep+3.14) * magnitude;
+				var vmagnitude = (magnitude*(dist/wavefront*decay));
+				if(vmagnitude < 0.001 && deltaStep > 100){
+					EPICENTERS.splice(j,1);
+					break;
+				}
+				v.z += Math.sin(dist/wavelength - deltaStep) * vmagnitude;
 			}
 		}
 	}

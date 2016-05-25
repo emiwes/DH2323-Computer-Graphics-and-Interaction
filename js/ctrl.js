@@ -15,6 +15,10 @@ function initCtrl(){
 		clickObject(event);
 	});
 
+	document.body.addEventListener("contextmenu", function(){
+		resetSphereAt(event);
+	});
+
 	document.body.addEventListener("mouseup", function(){
 		dragCamera = false;
 		dragSphere = false;
@@ -48,6 +52,8 @@ function initCtrl(){
 			case "KeyD":
 				panCamera("x", 2);
 				break;
+			case "Space":
+				EPICENTERS = [];
 		}
 	});
 }
@@ -77,9 +83,10 @@ function clickObject(e){
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
 		var position =  new THREE.Vector2(intersectedObject.point.x, intersectedObject.point.z);
-		var mag = 3.0;
-		var wL = mag*3;
-		var epi = new Epicenter(mag, 0.1, wL, position);
+		var mag = 5.0;
+		var wavelength = mag*3;
+		var decay = 1;
+		var epi = new Epicenter(mag, decay, wavelength, position);
 		EPICENTERS.push(epi);
 		//console.log(EPICENTERS);
 		// STEP = 0;
@@ -107,4 +114,14 @@ function translateSphere(e, sphere){
 
 	sphere.object.position.x += mouseX;
 	sphere.object.position.z += mouseY;
+}
+
+function resetSphereAt(e){
+	e.preventDefault();
+	var intersectedObject = getTargetObject(e);
+	if( intersectedObject.object.name == "waterSurface" ){
+		sphere.position.x = intersectedObject.point.x;
+		sphere.position.z = intersectedObject.point.z;
+		sphere.position.y = 50;
+	}
 }
