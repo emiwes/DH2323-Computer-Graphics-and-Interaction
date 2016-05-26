@@ -2,6 +2,7 @@ var container = document.getElementById("render");
 WIDTH = window.innerWidth;
 HEIGHT = window.innerHeight;
 RAINDROPS = [];
+SPHERES = [];
 
 // EPICENTER = new THREE.Vector2(0,0);
 EPICENTERS = [];
@@ -44,8 +45,8 @@ function init(){
 	pointLight.position.set( -200, 100, 200);
 	SCENE.add(pointLight);
 
-	ambLight = new THREE.AmbientLight(0x666666);
- 	SCENE.add(ambLight);
+	//ambLight = new THREE.AmbientLight(0x666666);
+ 	//SCENE.add(ambLight);
 	return SCENE;
 }
 
@@ -61,15 +62,15 @@ function initSurface(){
 	waterN.wrapS = waterN.wrapT = THREE.RepeatWrapping;
 
 	ms_Water = new THREE.Water(renderer, CAMERA, SCENE, {
-		textureWidth: 256
-		, textureHeight: 256
-		, alpha: 0.9
-		, sunDirection: pointLight.position.normalize()
-		, sunColor: 0xffffff
-		, waterNormals: waterN
-		, waterColor: 0x001f4e
-		, betaVersion: 0
-		, side: THREE.DoubleSide
+		textureWidth: 256, 
+		textureHeight: 256, 
+		alpha: 0.9, 
+		sunDirection: pointLight.position.normalize(), 
+		sunColor: 0xffffff, 
+		waterNormals: waterN, 
+		waterColor: 0x001f4e, 
+		betaVersion: 0, 
+		side: THREE.DoubleSide
 	});
 
 	// var material = new THREE.MeshLambertMaterial({
@@ -155,39 +156,39 @@ function initSkyBox(){
 	SCENE.add( mesh );
 }
 
-function addSphere(){
+function addSphere(r,x,z){
 	var sphereMaterial = new THREE.MeshLambertMaterial({
 		color: 0xCC0000
 	});
 
-	var radius = 10;
+	var radius = r;
 	var segments = 32;
 	var rings = 32;
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
-	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
+	var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 	sphere.userData = {"yVelocity": 0};
 	sphere.name = "sphere";
 	sphere.position.y = 50;
+	sphere.position.x = x;
+	sphere.position.z = z;
+	SPHERES.push(sphere);
 	SCENE.add(sphere);
 }
 
 function addRainDrops(amount){
 	for(var i = 0; i < amount; i++){
-		var rainDropMaterial = new THREE.MeshLambertMaterial({
-			color: 0xFFFFFF
+		var rainDropMaterial = new THREE.PointsMaterial({
+			color: 0xFF0000,
+			size: 30
 		});
-		var radius = 5;
-		var segments = 4;
-		var rings = 4;
 
-		var rainDropGeometry = new THREE.SphereGeometry( radius, segments, rings);
-		rainDrop = new THREE.Mesh( rainDropGeometry, rainDropMaterial );
+		var rainDrop = new THREE.Vector3();
 		rainDrop.userData = {"yVelocity":0};
 		rainDrop.name = "rainDrop";
-		rainDrop.position.y = 100;
-		var max = 250;
-		var min = -250;
+		rainDrop.position.y = 500;
+		var max = 1000;
+		var min = -1000;
 		rainDrop.position.x = Math.random() * (max - min) + min;
 		rainDrop.position.z = Math.random() * (max - min) + min;
 		RAINDROPS.push(rainDrop);
@@ -295,12 +296,19 @@ function animate(){
 			}
 		}
 	}
-	sphere.position.y += sphere.userData.yVelocity;
+	//addRainDrops(30);
 	for(var k in RAINDROPS){
 		RAINDROPS[k].position.y += RAINDROPS[k].userData.yVelocity;
-		floating(RAINDROPS[k]);
+		//floating(RAINDROPS[k]);
+		RAINDROPS[k].userData.yVelocity -= 0.098;
+		if(RAINDROPS[k].position.y< -50){
+			RAINDROPS.splice(k,1);
+		}
 	}
-	floating(sphere);
+	for(var i = 0; i < SPHERES.length; i++){
+		SPHERES[i].position.y += SPHERES[i].userData.yVelocity;
+		floating(SPHERES[i]);
+	}
 
 	plane.geometry.verticesNeedUpdate = true;
 	stats.end();
@@ -314,7 +322,7 @@ function animate(){
 var SCENE = init();
 initCtrl();
 initBottom();
-addSphere();
+addSphere(10,0,0);
 addRainDrops(0);
 initSurface();
 initSkyBox();
