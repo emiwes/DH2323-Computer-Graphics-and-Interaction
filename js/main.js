@@ -27,9 +27,11 @@ function init(){
 
 	// the camera starts at 0,0,0
 	// so pull it back
-	CAMERA.position.set( 0, 100, 300 );
-	CAMERA.rotation.x += 50;
-	// CAMERA.lookAt(new THREE.Vector3(0,0,0));
+	CAMERA.position.set( 200, 30, -200 );
+	// CAMERA.rotation.y += 3*Math.PI/4;
+	// CAMERA.rotation.x += Math.PI/8;
+	// CAMERA.rotation.z += Math.PI;
+	CAMERA.lookAt(new THREE.Vector3(0,0,0));
 	SCENE.add(CAMERA);
 
 	renderer = new THREE.WebGLRenderer();
@@ -39,16 +41,16 @@ function init(){
 	pointLight = new THREE.DirectionalLight(0xffff55, 1);
 
 	// set its position
-	pointLight.position.set( -600, 300, 600);
+	pointLight.position.set( -200, 100, 200);
 	SCENE.add(pointLight);
 
-	// ambLight = new THREE.AmbientLight(0x333333);
- 	// SCENE.add(ambLight);
+	ambLight = new THREE.AmbientLight(0x666666);
+ 	SCENE.add(ambLight);
 	return SCENE;
 }
 
 function initSurface(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 96, 96);
+	var geometry = new THREE.PlaneGeometry( 2000, 2000, 96, 96);
 	// var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
 	// texture.wrapS = THREE.RepeatWrapping;
 	// texture.wrapT = THREE.RepeatWrapping;
@@ -61,11 +63,11 @@ function initSurface(){
 	ms_Water = new THREE.Water(renderer, CAMERA, SCENE, {
 		textureWidth: 256
 		, textureHeight: 256
-		, alpha: 1.0
+		, alpha: 0.9
 		, sunDirection: pointLight.position.normalize()
 		, sunColor: 0xffffff
 		, waterNormals: waterN
-		, waterColor: 0x001e0f
+		, waterColor: 0x001f4e
 		, betaVersion: 0
 		, side: THREE.DoubleSide
 	});
@@ -149,7 +151,7 @@ function initSkyBox(){
 		depthWrite: false,
 		side: THREE.BackSide
 	} ),
-	mesh = new THREE.Mesh( new THREE.BoxGeometry( 1500, 1500, 1500 ), material );
+	mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
 	SCENE.add( mesh );
 }
 
