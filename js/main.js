@@ -166,7 +166,7 @@ function addSphere(){
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	sphere.userData = {"yVelocity": 0};
+	sphere.userData = {"yVelocity": 0, "xzVelocity": {"x":0, "z":0}};
 	sphere.name = "sphere";
 	sphere.position.y = 50;
 	SCENE.add(sphere);
@@ -204,34 +204,57 @@ function floating(obj){
 	var under = raycaster.intersectObjects( SCENE.children );
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
 	var above = raycaster.intersectObjects( SCENE.children );
-	var yDiff = 0;
+	var yDiff = 100;// gardcoded due to that yDiff need to be set in frame 1.
 	var r = obj.geometry.parameters.radius;
 	//var v0 = obj.userData.yVelocity;
 	obj.userData.yVelocity -= 0.098;
+
+	//the ball is above the surface
 	if(under[0].object.name == "waterSurface"){
 		yDiff = under[0].distance;
+		// console.log(under[0].object.geometry);
+		// console.log(obj);
+		// console.log(under[0].object.geometry.vertices[under[0].face.b]);
+		// console.log(under[0].object.geometry.vertices[under[0].face.c]);
 		//obj.userData.yVelocity -= 0.098;
-		//detect obj impact
-		if(yDiff-r < r && obj.userData.yVelocity < -1){
-				var position = new THREE.Vector2(obj.position.x, obj.position.z);
-				var h = yDiff-r;
-				var mag = h;//obj.geomerty.parameters.radius;
-				var wavelength = mag*3;
-				var decay = 0.5;
-				var epi = new Epicenter(mag, decay, wavelength, position);
-				EPICENTERS.push(epi);
-		}
+		
+		
+		
 
+		
+
+		//the ball is under the surface
 	}else if(above[0].object.name == "waterSurface"){
-		yDiff = above[0].distance;
+		yDiff = -above[0].distance;
 
+		
+	}
+	//detect obj impact
+	if(yDiff-r < r && obj.userData.yVelocity < -1){
+		var position = new THREE.Vector2(obj.position.x, obj.position.z);
+		var h = yDiff-r;
+		var mag = h;//obj.geomerty.parameters.radius;
+		var wavelength = mag*3;
+		var decay = 0.5;
+		var epi = new Epicenter(mag, decay, wavelength, position);
+		EPICENTERS.push(epi);
+	}
+	//sphere are touching the surface
+	if(yDiff-r <=0){
+		//move in x,y direction due to waves
+		var objNormal = under[0].face.normal;
 
+		obj.userData.xzVelocity.x /= 1.5;
+		obj.userData.xzVelocity.z /= 1.5;
 
+		obj.userData.xzVelocity.x += objNormal.x;
+		obj.userData.xzVelocity.z += objNormal.y;
 
-
+		//submerged volyme
+		//h = amount of radius under water
 		var h = 2*r;
-		if(yDiff < 2*r) {
-			var h = yDiff;
+		if(-yDiff < 2*r) {
+			h = -yDiff;
 		}
 		//volume of obj cap?
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
@@ -241,7 +264,6 @@ function floating(obj){
 			obj.userData.yVelocity = 0.4;
 		}
 	}
-	//obj.userData.yVelocity += yDiff*0.1;
 
 }
 
@@ -296,15 +318,21 @@ function animate(){
 		}
 	}
 	sphere.position.y += sphere.userData.yVelocity;
+	sphere.position.x += sphere.userData.xzVelocity.x;
+	sphere.position.z += sphere.userData.xzVelocity.z;
+
 	for(var k in RAINDROPS){
 		RAINDROPS[k].position.y += RAINDROPS[k].userData.yVelocity;
 		floating(RAINDROPS[k]);
 	}
+	
+	plane.geometry.computeFaceNormals();
 	floating(sphere);
 
 	plane.geometry.verticesNeedUpdate = true;
-	stats.end();
 
+	stats.end();
+	ms_Water.material.uniforms.time.value += 1.0 / 60.0;
 	ms_Water.render();
 	render();
 }
