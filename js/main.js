@@ -27,7 +27,7 @@ function init(){
 
 	// the camera starts at 0,0,0
 	// so pull it back
-	CAMERA.position.set( 200, 30, -200 );
+	CAMERA.position.set( 300, 50, 300 );
 	// CAMERA.rotation.y += 3*Math.PI/4;
 	// CAMERA.rotation.x += Math.PI/8;
 	// CAMERA.rotation.z += Math.PI;
@@ -38,10 +38,10 @@ function init(){
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
 
-	pointLight = new THREE.DirectionalLight(0xffff55, 1);
+	pointLight = new THREE.DirectionalLight(0xffff55);
 
 	// set its position
-	pointLight.position.set( -200, 100, 200);
+	pointLight.position.set( -600, 100, -600);
 	SCENE.add(pointLight);
 
 	ambLight = new THREE.AmbientLight(0x666666);
@@ -133,8 +133,8 @@ function initBottom(){
 }
 
 function initSkyBox(){
-	var path = "img/skybox/";
-	var format = '.jpg';
+	var path = "img/";
+	var format = '.png';
 	var urls = [
 		path + 'px' + format, path + 'nx' + format,
 		path + 'py' + format, path + 'ny' + format,
@@ -150,8 +150,9 @@ function initSkyBox(){
 		uniforms: shader.uniforms,
 		depthWrite: false,
 		side: THREE.BackSide
-	} ),
-	mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
+	} );
+	var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
+	mesh.position.y = -400;
 	SCENE.add( mesh );
 }
 
@@ -333,6 +334,7 @@ function animate(){
 
 	stats.end();
 	ms_Water.material.uniforms.time.value += 1.0 / 60.0;
+
 	ms_Water.render();
 	render();
 }
