@@ -28,7 +28,7 @@ function init(){
 
 	// the camera starts at 0,0,0
 	// so pull it back
-	CAMERA.position.set( 200, 30, -200 );
+	CAMERA.position.set( 300, 50, 300 );
 	// CAMERA.rotation.y += 3*Math.PI/4;
 	// CAMERA.rotation.x += Math.PI/8;
 	// CAMERA.rotation.z += Math.PI;
@@ -39,10 +39,10 @@ function init(){
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
 
-	pointLight = new THREE.DirectionalLight(0xffff55, 1);
+	pointLight = new THREE.DirectionalLight(0xffff55);
 
 	// set its position
-	pointLight.position.set( -200, 100, 200);
+	pointLight.position.set( -600, 100, -600);
 	SCENE.add(pointLight);
 
 	//ambLight = new THREE.AmbientLight(0x666666);
@@ -134,8 +134,8 @@ function initBottom(){
 }
 
 function initSkyBox(){
-	var path = "img/skybox/";
-	var format = '.jpg';
+	var path = "img/";
+	var format = '.png';
 	var urls = [
 		path + 'px' + format, path + 'nx' + format,
 		path + 'py' + format, path + 'ny' + format,
@@ -151,8 +151,9 @@ function initSkyBox(){
 		uniforms: shader.uniforms,
 		depthWrite: false,
 		side: THREE.BackSide
-	} ),
-	mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
+	} );
+	var mesh = new THREE.Mesh( new THREE.BoxGeometry( 5000, 5000, 5000 ), material );
+	mesh.position.y = -400;
 	SCENE.add( mesh );
 }
 
@@ -167,7 +168,7 @@ function addSphere(r,x,z){
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	sphere.userData = {"yVelocity": 0};
+	sphere.userData = {"yVelocity": 0, "xzVelocity": {"x":0, "z":0}};
 	sphere.name = "sphere";
 	sphere.position.y = 50;
 	sphere.position.x = x;
@@ -177,22 +178,48 @@ function addSphere(r,x,z){
 }
 
 function addRainDrops(amount){
-	for(var i = 0; i < amount; i++){
-		var rainDropMaterial = new THREE.PointsMaterial({
-			color: 0xFF0000,
-			size: 30
-		});
+	var textureLoader = new THREE.TextureLoader();
+	var sprite = textureLoader.load("img/sprite.png");
+	var rainDropMaterial = new THREE.PointsMaterial({
+		color: 0x990099,
+		size: 10,
+		map: sprite,
+		blending: THREE.AdditiveBlending,
+		transparent: true,
+		depthTest: false	
+	});
 
+	var max = 1000;
+	var min = -1000;
+
+	var rainDropGeometry = new THREE.Geometry();
+
+	for(var i = 0; i < amount; i++){
 		var rainDrop = new THREE.Vector3();
-		rainDrop.userData = {"yVelocity":0};
-		rainDrop.name = "rainDrop";
-		rainDrop.position.y = 500;
-		var max = 1000;
-		var min = -1000;
-		rainDrop.position.x = Math.random() * (max - min) + min;
-		rainDrop.position.z = Math.random() * (max - min) + min;
-		RAINDROPS.push(rainDrop);
-		SCENE.add(rainDrop);
+		rainDrop.x = Math.random() * (max - min) + min;
+		rainDrop.z = Math.random() * (max - min) + min;
+		rainDrop.y = Math.random() * (350 - 100) + 100;
+		rainDrop.userData = {"yVelocity": 0};
+
+		rainDropGeometry.vertices.push(rainDrop);
+	}
+	RAIN = new THREE.Points(rainDropGeometry, rainDropMaterial);
+	SCENE.add(RAIN);
+}
+
+function rainFall(){
+	var max = 1000;
+	var min = -1000;
+	for (var i = 0; i < RAIN.geometry.vertices.length; i++){
+		var drop = RAIN.geometry.vertices[i];
+		drop.y += drop.userData.yVelocity;
+		drop.userData.yVelocity -= 0.01;
+		if(drop.y < 0){
+			drop.x = Math.random() * (max - min) + min;
+			drop.z = Math.random() * (max - min) + min;
+			drop.y = Math.random() * (350 - 100) + 100;
+			drop.userData = {"yVelocity": 0};
+		}
 	}
 }
 
@@ -205,35 +232,58 @@ function floating(obj){
 	var under = raycaster.intersectObjects( SCENE.children );
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
 	var above = raycaster.intersectObjects( SCENE.children );
-	var yDiff = 0;
+	var yDiff = 100;// gardcoded due to that yDiff need to be set in frame 1.
 	var r = obj.geometry.parameters.radius;
 	//var v0 = obj.userData.yVelocity;
 	obj.userData.yVelocity -= 0.098;
+
+	//the ball is above the surface
 	if(under[0].object.name == "waterSurface"){
 		yDiff = under[0].distance;
+		// console.log(under[0].object.geometry);
+		// console.log(obj);
+		// console.log(under[0].object.geometry.vertices[under[0].face.b]);
+		// console.log(under[0].object.geometry.vertices[under[0].face.c]);
 		//obj.userData.yVelocity -= 0.098;
-		//detect obj impact
-		if(yDiff-r < r && obj.userData.yVelocity < -1){
-				var position = new THREE.Vector2(obj.position.x, obj.position.z);
-				var h = yDiff-r;
-				var mag = h;//obj.geomerty.parameters.radius;
-				var wavelength = mag*3;
-				var decay = 0.5;
-				var epi = new Epicenter(mag, decay, wavelength, position);
-				EPICENTERS.push(epi);
-		}
+		
+		
+		
 
+		
+
+		//the ball is under the surface
 	}else if(above[0].object.name == "waterSurface"){
-		yDiff = above[0].distance;
+		yDiff = -above[0].distance;
 
+		
+	}
+	//detect obj impact
+	if(yDiff-r < r && obj.userData.yVelocity < -1){
+		var position = new THREE.Vector2(obj.position.x, obj.position.z);
+		var h = yDiff-r;
+		var mag = h;//obj.geomerty.parameters.radius;
+		var wavelength = mag*3;
+		var decay = 0.5;
+		var epi = new Epicenter(mag, decay, wavelength, position);
+		EPICENTERS.push(epi);
+	}
+	//sphere are touching the surface
+	if(yDiff-r <= 0){
+		//move in x,y direction due to waves
+		var objNormal = under[0].face.normal;
 
-
-
-
+		//h = amount of radius under water
 		var h = 2*r;
-		if(yDiff < 2*r) {
-			var h = yDiff;
+		if(-yDiff < 2*r) {
+			h = -yDiff;
 		}
+		obj.userData.xzVelocity.x /= 1.1;
+		obj.userData.xzVelocity.z /= 1.1;
+
+		obj.userData.xzVelocity.x += objNormal.x;
+		obj.userData.xzVelocity.z += objNormal.y;
+
+		//submerged volyme
 		//volume of obj cap?
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
 		//var volSubmerged = h/r;
@@ -242,7 +292,6 @@ function floating(obj){
 			obj.userData.yVelocity = 0.4;
 		}
 	}
-	//obj.userData.yVelocity += yDiff*0.1;
 
 }
 
@@ -296,7 +345,7 @@ function animate(){
 			}
 		}
 	}
-	//addRainDrops(30);
+
 	for(var k in RAINDROPS){
 		RAINDROPS[k].position.y += RAINDROPS[k].userData.yVelocity;
 		//floating(RAINDROPS[k]);
@@ -307,11 +356,18 @@ function animate(){
 	}
 	for(var i = 0; i < SPHERES.length; i++){
 		SPHERES[i].position.y += SPHERES[i].userData.yVelocity;
+		SPHERES[i].position.x += SPHERES[i].userData.xzVelocity.x;
+		SPHERES[i].position.z += SPHERES[i].userData.xzVelocity.z;
 		floating(SPHERES[i]);
 	}
-
+	rainFall();
+	
+	plane.geometry.computeFaceNormals();
 	plane.geometry.verticesNeedUpdate = true;
+	RAIN.geometry.verticesNeedUpdate = true;
+
 	stats.end();
+	ms_Water.material.uniforms.time.value += 1.0 / 60.0;
 
 	ms_Water.render();
 	render();
@@ -323,7 +379,7 @@ var SCENE = init();
 initCtrl();
 initBottom();
 addSphere(10,0,0);
-addRainDrops(0);
+addRainDrops(50250);
 initSurface();
 initSkyBox();
 animate();
