@@ -1,7 +1,8 @@
 function initCtrl(){
 	var dragCamera = false;
 	var dragSphere = false;
-	document.body.addEventListener("mousedown", function(){
+	var renderContainer = document.getElementById("render");
+	renderContainer.addEventListener("mousedown", function(){
 		if(getTargetObject(event).object.name === "sphere"){
 			draggingObj = getTargetObject(event);
 			dragSphere = true;
@@ -11,20 +12,20 @@ function initCtrl(){
 		}
 	});
 
-	document.body.addEventListener("click", function(){
+	renderContainer.addEventListener("click", function(){
 		clickObject(event);
 	});
 
-	document.body.addEventListener("contextmenu", function(){
+	renderContainer.addEventListener("contextmenu", function(){
 		addSphereAt(event);
 	});
 
-	document.body.addEventListener("mouseup", function(){
+	renderContainer.addEventListener("mouseup", function(){
 		dragCamera = false;
 		dragSphere = false;
 	});
 
-	document.body.addEventListener("mousemove", function(){
+	renderContainer.addEventListener("mousemove", function(){
 		if( dragCamera ){
 			rotateCamera(event);
 		}
@@ -83,10 +84,16 @@ function clickObject(e){
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
 		var position =  new THREE.Vector2(intersectedObject.point.x, intersectedObject.point.z);
-		var mag = Math.random()*10;
+
+		var mag = document.getElementById("magnitudeSlider").value;
+		var wavelength = document.getElementById("wavelengthSlider").value*10;
+		console.log("MAG IS: " + mag);
+		console.log("WAVELENGTH IS: " + wavelength);
+
+		// var mag = Math.random()*10;
 		// var mag = 6.0;
 		//var randomWaveLengthFactor = Math.floor(Math.random() * 10) + 1;
-		var wavelength = mag*3;
+		// var wavelength = mag*3;
 		var decay = 1;
 		var epi = new Epicenter(mag, decay, wavelength, position);
 		EPICENTERS.push(epi);
@@ -123,5 +130,24 @@ function addSphereAt(e){
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
 		addSphere(10, intersectedObject.point.x, intersectedObject.point.z);
+	}
+}
+
+function changeWaterSurface(){
+	if(RAINENABLED){
+		RAINENABLED = false;
+		plane.remove(ms_Water);
+		ms_Water = ms_Water2;
+		plane.add(ms_Water);
+		plane.material = ms_Water.material;
+		SCENE.remove(RAIN);
+	}
+	else {
+		RAINENABLED = true;
+		plane.remove(ms_Water);
+		ms_Water = ms_Water1;
+		plane.add(ms_Water);
+		plane.material = ms_Water.material;
+		SCENE.add(RAIN);
 	}
 }

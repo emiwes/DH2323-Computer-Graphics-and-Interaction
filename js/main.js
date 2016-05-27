@@ -3,6 +3,8 @@ WIDTH = window.innerWidth;
 HEIGHT = window.innerHeight;
 RAINDROPS = [];
 SPHERES = [];
+TEXTURELOADER = new THREE.TextureLoader();
+RAINENABLED = false;
 
 // EPICENTER = new THREE.Vector2(0,0);
 EPICENTERS = [];
@@ -16,7 +18,6 @@ document.body.appendChild( stats.dom );
 
 function deg2rad(deg){
 	var res = deg * (3.14 / 180);
-	console.log(res);
 	return res;
 }
 
@@ -45,68 +46,49 @@ function init(){
 	pointLight.position.set( -600, 100, -600);
 	SCENE.add(pointLight);
 
-	//ambLight = new THREE.AmbientLight(0x666666);
- 	//SCENE.add(ambLight);
+	ambLight = new THREE.AmbientLight(0x666666);
+ 	SCENE.add(ambLight);
 	return SCENE;
 }
 
 function initSurface(){
+	MATERIALS = [];
 	var geometry = new THREE.PlaneGeometry( 2000, 2000, 96, 96);
-	// var texture = THREE.ImageUtils.loadTexture('img/water.jpg');
-	// texture.wrapS = THREE.RepeatWrapping;
-	// texture.wrapT = THREE.RepeatWrapping;
-	// texture.repeat.set( 4, 4 );
 
-
-	var waterN = new THREE.ImageUtils.loadTexture("img/waternormals.jpg");
+	var waterN = TEXTURELOADER.load("img/waternormals2.jpg");
 	waterN.wrapS = waterN.wrapT = THREE.RepeatWrapping;
 
-	ms_Water = new THREE.Water(renderer, CAMERA, SCENE, {
-		textureWidth: 256, 
-		textureHeight: 256, 
-		alpha: 0.9, 
-		sunDirection: pointLight.position.normalize(), 
-		sunColor: 0xffffff, 
-		waterNormals: waterN, 
-		waterColor: 0x001f4e, 
-		betaVersion: 0, 
-		side: THREE.DoubleSide
+	ms_Water1 = new THREE.Water(renderer, CAMERA, SCENE, {
+		textureWidth: 256,
+		textureHeight: 256,
+		alpha: 0.9,
+		sunDirection: pointLight.position.normalize(),
+		sunColor: 0xffffff,
+		waterNormals: waterN,
+		waterColor: 0x001f4e,
+		betaVersion: 0,
+		side: THREE.DoubleSide,
+		name: "ms_Water1"
 	});
 
-	// var material = new THREE.MeshLambertMaterial({
-	// 	color: 0xffffff,
-	// 	side: THREE.DoubleSide,
-	// 	map: texture,
-	// 	transparent: true,
-	// 	opacity: 0.5
-	// });
+	var waterNorm = TEXTURELOADER.load("img/waternormals.jpg");
+	waterNorm.wrapS = waterNorm.wrapT = THREE.RepeatWrapping;
 
-	// console.log("MirrorShader");
-
-
-	// var mirrorShader = THREE.ShaderLib["MirrorShader"];
-	// var mirrorShader = THREE.ShaderLib["cube"];
-	// mirrorShader.uniforms[ "tCube" ].value = textureCube;
-	// var material = new THREE.ShaderMaterial({
-	// 	// fragmentShader: mirrorShader.fragmentShader
-	// 	// , vertexShader: mirrorShader.vertexShader
-	// 	// , opacity: 0.5
-	// 	// , side: THREE.DoubleSide
-	// 	fragmentShader: mirrorShader.fragmentShader,
-	// 	vertexShader: mirrorShader.vertexShader,
-	// 	uniforms: mirrorShader.uniforms,
-	// 	depthWrite: false,
-	// 	side: THREE.DoubleSide
-	// });
-
-	// var shader = THREE.ShaderLib["test"];
-
-	// var material = new THREE.ShaderMaterial({
-	// 	fragmentShader: shader.fragmentShader
-	// 	, vertexShader: shader.vertexShader
-	// 	, side: THREE.DoubleSide
-	// })
-
+	ms_Water2 = new THREE.Water(renderer, CAMERA, SCENE, {
+		textureWidth: 256,
+		textureHeight: 256,
+		alpha: 0.9,
+		sunDirection: pointLight.position.normalize(),
+		sunColor: 0xffffff,
+		waterNormals: waterNorm,
+		waterColor: 0x001f4e,
+		betaVersion: 0,
+		side: THREE.DoubleSide,
+		name: "ms_Water2"
+	});
+	ms_Water = ms_Water2;
+	MATERIALS.push(ms_Water1);
+	MATERIALS.push(ms_Water2);
 	plane = new THREE.Mesh( geometry, ms_Water.material );
 	plane.add(ms_Water);
 	plane.name = "waterSurface";
@@ -117,8 +99,8 @@ function initSurface(){
 }
 
 function initBottom(){
-	var geometry = new THREE.PlaneGeometry( 500, 500, 1, 1);
-	var texture = THREE.ImageUtils.loadTexture('img/sand-texture.jpg');
+	var geometry = new THREE.PlaneGeometry( 2000, 2000, 1, 1);
+	var texture = TEXTURELOADER.load('img/sand-texture.jpg');
 
 	var material = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
@@ -179,14 +161,15 @@ function addSphere(r,x,z){
 
 function addRainDrops(amount){
 	var textureLoader = new THREE.TextureLoader();
-	var sprite = textureLoader.load("img/sprite.png");
+	var sprite = TEXTURELOADER.load("img/sprite1.png");
+
 	var rainDropMaterial = new THREE.PointsMaterial({
-		color: 0x990099,
-		size: 10,
+		color: 0xb47e21,
+		size: 2,
 		map: sprite,
-		blending: THREE.AdditiveBlending,
+		blending: THREE.SubtractiveBlending,
 		transparent: true,
-		depthTest: false	
+		depthTest: false
 	});
 
 	var max = 1000;
@@ -198,13 +181,13 @@ function addRainDrops(amount){
 		var rainDrop = new THREE.Vector3();
 		rainDrop.x = Math.random() * (max - min) + min;
 		rainDrop.z = Math.random() * (max - min) + min;
-		rainDrop.y = Math.random() * (350 - 100) + 100;
-		rainDrop.userData = {"yVelocity": 0};
+		rainDrop.y = Math.random() * 200;
+		rainDrop.userData = {"yVelocity": -2};
 
 		rainDropGeometry.vertices.push(rainDrop);
 	}
 	RAIN = new THREE.Points(rainDropGeometry, rainDropMaterial);
-	SCENE.add(RAIN);
+	// SCENE.add(RAIN);
 }
 
 function rainFall(){
@@ -217,8 +200,8 @@ function rainFall(){
 		if(drop.y < 0){
 			drop.x = Math.random() * (max - min) + min;
 			drop.z = Math.random() * (max - min) + min;
-			drop.y = Math.random() * (350 - 100) + 100;
-			drop.userData = {"yVelocity": 0};
+			drop.y = Math.random() * 200;
+			drop.userData = {"yVelocity": -2};
 		}
 	}
 }
@@ -245,17 +228,17 @@ function floating(obj){
 		// console.log(under[0].object.geometry.vertices[under[0].face.b]);
 		// console.log(under[0].object.geometry.vertices[under[0].face.c]);
 		//obj.userData.yVelocity -= 0.098;
-		
-		
-		
 
-		
+
+
+
+
 
 		//the ball is under the surface
 	}else if(above[0].object.name == "waterSurface"){
 		yDiff = -above[0].distance;
 
-		
+
 	}
 	//detect obj impact
 	if(yDiff-r < r && obj.userData.yVelocity < -1){
@@ -296,13 +279,6 @@ function floating(obj){
 }
 
 function render(){
-
-
-	// STEP += 0.07;
-
-	// pointLight.position.y = Math.sin(STEP)*300;
-	// pointLight.position.x = 75 - Math.cos(STEP)* 75;
-
 	renderer.render(SCENE, CAMERA);
 }
 
@@ -354,21 +330,25 @@ function animate(){
 			RAINDROPS.splice(k,1);
 		}
 	}
+
+	if(RAINENABLED){
+		rainFall();
+		RAIN.geometry.verticesNeedUpdate = true;
+	}
+
 	for(var i = 0; i < SPHERES.length; i++){
 		SPHERES[i].position.y += SPHERES[i].userData.yVelocity;
 		SPHERES[i].position.x += SPHERES[i].userData.xzVelocity.x;
 		SPHERES[i].position.z += SPHERES[i].userData.xzVelocity.z;
 		floating(SPHERES[i]);
 	}
-	rainFall();
-	
+
 	plane.geometry.computeFaceNormals();
 	plane.geometry.verticesNeedUpdate = true;
-	RAIN.geometry.verticesNeedUpdate = true;
+
 
 	stats.end();
 	ms_Water.material.uniforms.time.value += 1.0 / 60.0;
-
 	ms_Water.render();
 	render();
 }
@@ -379,7 +359,7 @@ var SCENE = init();
 initCtrl();
 initBottom();
 addSphere(10,0,0);
-addRainDrops(50250);
+addRainDrops(50000);
 initSurface();
 initSkyBox();
 animate();
