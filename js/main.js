@@ -16,7 +16,6 @@ document.body.appendChild( stats.dom );
 
 function deg2rad(deg){
 	var res = deg * (3.14 / 180);
-	console.log(res);
 	return res;
 }
 
@@ -39,7 +38,8 @@ function init(){
 	renderer.setSize(WIDTH, HEIGHT);
 	container.appendChild(renderer.domElement);
 
-	pointLight = new THREE.DirectionalLight(0xffff55);
+	//pointLight = new THREE.DirectionalLight(0x999911);
+	pointLight = new THREE.PointLight(0x999911);
 
 	// set its position
 	pointLight.position.set( -600, 100, -600);
@@ -168,8 +168,8 @@ function addSphere(r,x,z){
 
 	var sphereGeometry =  new THREE.SphereGeometry(	radius,	segments, rings);
 	var sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
-	sphere.userData = {"yVelocity": 0, "xzVelocity": {"x":0, "z":0}};
-	sphere.name = "sphere";
+	sphere.userData = {"velocity": {"x":0, "y":0, "z":0}, "impact": false};
+	sphere.name = "sphere"; 
 	sphere.position.y = 50;
 	sphere.position.x = x;
 	sphere.position.z = z;
@@ -181,8 +181,8 @@ function addRainDrops(amount){
 	var textureLoader = new THREE.TextureLoader();
 	var sprite = textureLoader.load("img/sprite.png");
 	var rainDropMaterial = new THREE.PointsMaterial({
-		color: 0x990099,
-		size: 10,
+		color: 0x999999,
+		size: 1,
 		map: sprite,
 		blending: THREE.AdditiveBlending,
 		transparent: true,
@@ -199,7 +199,7 @@ function addRainDrops(amount){
 		rainDrop.x = Math.random() * (max - min) + min;
 		rainDrop.z = Math.random() * (max - min) + min;
 		rainDrop.y = Math.random() * (350 - 100) + 100;
-		rainDrop.userData = {"yVelocity": 0};
+		rainDrop.userData = {"velocity": {"x":0,"y":-3,"z":0}};
 
 		rainDropGeometry.vertices.push(rainDrop);
 	}
@@ -212,13 +212,13 @@ function rainFall(){
 	var min = -1000;
 	for (var i = 0; i < RAIN.geometry.vertices.length; i++){
 		var drop = RAIN.geometry.vertices[i];
-		drop.y += drop.userData.yVelocity;
-		drop.userData.yVelocity -= 0.01;
+		drop.y += drop.userData.velocity.y;
+		drop.userData.velocity.y -= 0.01;
 		if(drop.y < 0){
 			drop.x = Math.random() * (max - min) + min;
 			drop.z = Math.random() * (max - min) + min;
 			drop.y = Math.random() * (350 - 100) + 100;
-			drop.userData = {"yVelocity": 0};
+			drop.userData.velocity.y = -3;
 		}
 	}
 }
@@ -227,69 +227,61 @@ function rainFall(){
 function floating(obj){
 	var objPosition = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z);
 	var raycaster = new THREE.Raycaster();
+	obj.userData.velocity.y -= 0.2;
 
 	raycaster.set( objPosition, new THREE.Vector3(0,-1,0) );
-	var under = raycaster.intersectObjects( SCENE.children );
+	var down = raycaster.intersectObjects( SCENE.children );
 	raycaster.set( objPosition, new THREE.Vector3(0,1,0) );
-	var above = raycaster.intersectObjects( SCENE.children );
-	var yDiff = 100;// gardcoded due to that yDiff need to be set in frame 1.
+	var up = raycaster.intersectObjects( SCENE.children );
+	
+	var yDiff;
 	var r = obj.geometry.parameters.radius;
-	//var v0 = obj.userData.yVelocity;
-	obj.userData.yVelocity -= 0.098;
+	var h = 2*r;
 
-	//the ball is above the surface
-	if(under[0].object.name == "waterSurface"){
-		yDiff = under[0].distance;
-		// console.log(under[0].object.geometry);
-		// console.log(obj);
-		// console.log(under[0].object.geometry.vertices[under[0].face.b]);
-		// console.log(under[0].object.geometry.vertices[under[0].face.c]);
-		//obj.userData.yVelocity -= 0.098;
-		
-		
-		
 
-		
-
-		//the ball is under the surface
-	}else if(above[0].object.name == "waterSurface"){
-		yDiff = -above[0].distance;
-
-		
+	if(down[0].object.name == "waterSurface"){
+		yDiff = down[0].distance;
+	}else if(up[0].object.name == "waterSurface"){
+		yDiff = -up[0].distance;	
 	}
-	//detect obj impact
-	if(yDiff-r < r && obj.userData.yVelocity < -1){
-		var position = new THREE.Vector2(obj.position.x, obj.position.z);
-		var h = yDiff-r;
-		var mag = h;//obj.geomerty.parameters.radius;
-		var wavelength = mag*3;
-		var decay = 0.5;
-		var epi = new Epicenter(mag, decay, wavelength, position);
-		EPICENTERS.push(epi);
-	}
-	//sphere are touching the surface
+	
+
+
+	//sphere is touching the surface
 	if(yDiff-r <= 0){
+		//detect surface impact
+		if(!obj.userData.impact){
+			obj.userData.impact = true;
+			var position = new THREE.Vector2(obj.position.x, obj.position.z);
+			var mag = r;//obj.geomerty.parameters.radius;
+			var wavelength = h;
+			var decay = 0.5;
+			var epi = new Epicenter(mag, decay, wavelength, position);
+			EPICENTERS.push(epi);
+		}
 		//move in x,y direction due to waves
-		var objNormal = under[0].face.normal;
+		var objNormal = down[0].face.normal;
 
 		//h = amount of radius under water
-		var h = 2*r;
-		if(-yDiff < 2*r) {
+		if(-yDiff < h) {
 			h = -yDiff;
 		}
-		obj.userData.xzVelocity.x /= 1.1;
-		obj.userData.xzVelocity.z /= 1.1;
+		obj.userData.velocity.x /= 1.5;
+		obj.userData.velocity.z /= 1.5;
 
-		obj.userData.xzVelocity.x += objNormal.x;
-		obj.userData.xzVelocity.z += objNormal.y;
+		obj.userData.velocity.x += objNormal.x/10;
+		obj.userData.velocity.z += objNormal.y/10;
 
 		//submerged volyme
-		//volume of obj cap?
+		//volume of sphere cap?
 		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
-		//var volSubmerged = h/r;
-		obj.userData.yVelocity += 0.005*volSubmerged;
-		if (obj.userData.yVelocity > 0.4){
-			obj.userData.yVelocity = 0.4;
+		//volSubmerged *= 0.005;
+		obj.userData.velocity.y += 0.01*volSubmerged;
+		//obj.userData.velocity.x *= objNormal.x;
+		//obj.userData.velocity.y *= objNormal.y;
+		//obj.userData.velocity.z *= objNormal.z;
+		if (obj.userData.velocity.y > 0.4){
+			obj.userData.velocity.y = 0.4;
 		}
 	}
 
@@ -346,18 +338,10 @@ function animate(){
 		}
 	}
 
-	for(var k in RAINDROPS){
-		RAINDROPS[k].position.y += RAINDROPS[k].userData.yVelocity;
-		//floating(RAINDROPS[k]);
-		RAINDROPS[k].userData.yVelocity -= 0.098;
-		if(RAINDROPS[k].position.y< -50){
-			RAINDROPS.splice(k,1);
-		}
-	}
 	for(var i = 0; i < SPHERES.length; i++){
-		SPHERES[i].position.y += SPHERES[i].userData.yVelocity;
-		SPHERES[i].position.x += SPHERES[i].userData.xzVelocity.x;
-		SPHERES[i].position.z += SPHERES[i].userData.xzVelocity.z;
+		SPHERES[i].position.y += SPHERES[i].userData.velocity.y;
+		SPHERES[i].position.x += SPHERES[i].userData.velocity.x;
+		SPHERES[i].position.z += SPHERES[i].userData.velocity.z;
 		floating(SPHERES[i]);
 	}
 	rainFall();
@@ -379,7 +363,7 @@ var SCENE = init();
 initCtrl();
 initBottom();
 addSphere(10,0,0);
-addRainDrops(50250);
+addRainDrops(50000);
 initSurface();
 initSkyBox();
 animate();

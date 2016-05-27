@@ -41,19 +41,26 @@ function initCtrl(){
 	document.body.addEventListener("keydown", function(){
 		switch(event.code){
 			case "KeyW":
-				panCamera("y",4);
+				panCamera("z",-4);
 				break;
 			case "KeyA":
-				panCamera("x", -2);
+				panCamera("x", -4);
 				break;
 			case "KeyS":
-				panCamera("y",-2);
+				panCamera("z", 4);
 				break;
 			case "KeyD":
-				panCamera("x", 2);
+				panCamera("x", 4);
 				break;
 			case "Space":
 				EPICENTERS = [];
+				break;
+			case "KeyR":
+				panCamera("y", 4);
+				break;
+			case "KeyF":
+				panCamera("y", -4);
+				break;
 		}
 	});
 }
@@ -63,6 +70,8 @@ function panCamera(dir, amount){
 		CAMERA.position[dir] += amount;
 	}else if(dir == "x"){
 		CAMERA.translateX(amount);
+	}else if(dir == "z"){
+		CAMERA.translateZ(amount);
 	}
 }
 
@@ -70,8 +79,8 @@ function rotateCamera(e){
 	var x = e.movementX;
 	var y = e.movementY;
 
-	CAMERA.rotation.y += Math.sin(-x*0.01);
-	CAMERA.rotation.x += Math.sin(-y*0.01);
+	CAMERA.rotateY(Math.sin(-x*0.01));
+	CAMERA.rotateX(Math.sin(-y*0.01));
 }
 
 function zoomCamera(e){
@@ -79,7 +88,6 @@ function zoomCamera(e){
 }
 
 function clickObject(e){
-	console.log(e);
 	var intersectedObject = getTargetObject(e);
 	if( intersectedObject.object.name == "waterSurface" ){
 		var position =  new THREE.Vector2(intersectedObject.point.x, intersectedObject.point.z);
@@ -106,7 +114,6 @@ function getTargetObject(e){
   	mouseVector.y = 1 - 2 * ( e.clientY / HEIGHT );
 	raycaster.setFromCamera( mouseVector, CAMERA );
 	var intersects = raycaster.intersectObjects( SCENE.children );
-	console.log(intersects);
 	return intersects[0];
 }
 
@@ -121,7 +128,17 @@ function translateSphere(e, sphere){
 function addSphereAt(e){
 	e.preventDefault();
 	var intersectedObject = getTargetObject(e);
-	if( intersectedObject.object.name == "waterSurface" ){
-		addSphere(10, intersectedObject.point.x, intersectedObject.point.z);
+	if( intersectedObject.object.name == "waterSurface"){
+		if(SPHERES.length >= 5){
+			var obj = SPHERES.splice(0,1)[0];
+			obj.position.x = intersectedObject.point.x;
+			obj.position.z = intersectedObject.point.z;
+			obj.position.y = 50;
+			obj.userData.impact = false;
+			obj.userData.velocity = {"x":0,"y":0,"z":0}
+			SPHERES.push(obj);
+		}else{
+			addSphere(10, intersectedObject.point.x, intersectedObject.point.z);
+		}
 	}
 }
