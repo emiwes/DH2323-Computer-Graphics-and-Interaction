@@ -6,7 +6,19 @@
     <link rel="stylesheet" href="css/stylesheet.css" media="screen" title="no title" charset="utf-8">
   </head>
   <body>
-
+      <div class="" style="width:500px;background-color:rgba(0,0,0,0.5);position:absolute;left:calc(50% - 250px);top:1%;color:white;border-radius:12px">
+          <div class="" style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:15px 0">
+              <div>Wave length factor</div>
+              <div class="userInput" style="width:50%;text-align:center">
+                  <span>1</span><input id="wavelengthSlider" style="width:75%" type="range" min="1" max="10" name="wavelength" value="2"\><span>10</span>
+              </div>
+              <div>Magnitude</div>
+              <div class="userInput" style="width:50%;text-align:center">
+                  <span>1</span><input id="magnitudeSlider" style="width:75%" type="range" min="1" max="10" name="magnitude" value="6"\><span>10</span>
+              </div>
+              <button type="button" onclick="changeWaterSurface()" name="button">click meh!</button>
+          </div>
+      </div>
 
     <div id="render"></div>
     <script type="text/javascript" src="js/three.js"> </script>
