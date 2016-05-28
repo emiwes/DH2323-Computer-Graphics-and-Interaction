@@ -173,15 +173,17 @@ function addRainDrops(amount){
 		depthTest: false
 	});
 
-	var max = 1000;
-	var min = -1000;
+	var xMax = CAMERA.position.x + 500;
+	var xMin = CAMERA.position.x - 500;
+	var zMax = CAMERA.position.z + 500;
+	var zMin = CAMERA.position.z - 500;
 
 	var rainDropGeometry = new THREE.Geometry();
 
 	for(var i = 0; i < amount; i++){
 		var rainDrop = new THREE.Vector3();
-		rainDrop.x = Math.random() * (max - min) + min;
-		rainDrop.z = Math.random() * (max - min) + min;
+		rainDrop.x = Math.random() * (xMax - xMin) + xMin;
+		rainDrop.z = Math.random() * (zMax - zMin) + zMin;
 		rainDrop.y = Math.random() * (350 - 100) + 100;
 		rainDrop.userData = {"velocity": {"x":0,"y":-3,"z":0}};
 
@@ -193,15 +195,19 @@ function addRainDrops(amount){
 }
 
 function rainFall(){
-	var max = 1000;
-	var min = -1000;
+	
+	var xMax = CAMERA.position.x + 500;
+	var xMin = CAMERA.position.x - 500;
+	var zMax = CAMERA.position.z + 500;
+	var zMin = CAMERA.position.z - 500;
+
 	for (var i = 0; i < RAIN.geometry.vertices.length; i++){
 		var drop = RAIN.geometry.vertices[i];
 		drop.y += drop.userData.velocity.y;
 		drop.userData.velocity.y -= 0.01;
 		if(drop.y < 0){
-			drop.x = Math.random() * (max - min) + min;
-			drop.z = Math.random() * (max - min) + min;
+			drop.x = Math.random() * (xMax - xMin) + xMin;
+			drop.z = Math.random() * (zMax - zMin) + zMin;
 			drop.y = Math.random() * (350 - 100) + 100;
 			drop.userData.velocity.y = -3;
 		}
@@ -345,7 +351,7 @@ var SCENE = init();
 initCtrl();
 initBottom();
 addSphere(10,0,0);
-addRainDrops(50000);
+addRainDrops(30000);
 initSurface();
 initSkyBox();
 animate();
