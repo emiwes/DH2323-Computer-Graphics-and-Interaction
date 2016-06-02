@@ -76,12 +76,27 @@ function panCamera(dir, amount){
 	}
 }
 
+
 function rotateCamera(e){
 	var x = e.movementX;
 	var y = e.movementY;
+	var pi_2 = Math.pi/2;
+	
+	var pitch = CAMERA.rotation.x
+	var yaw = CAMERA.rotation.y
 
-	CAMERA.rotateY(Math.sin(-x*0.01));
-	CAMERA.rotateX(Math.sin(-y*0.01));
+
+	pitch += Math.sin(-y*0.01);
+	yaw += Math.sin(-x*0.01);
+
+	if(pitch > pi_2){
+		pitch = Math.pi/2;
+	}else if(pitch < -pi_2){
+		pitch = -pi_2;
+	}
+
+	CAMERA.rotation.order = "YXZ";
+	CAMERA.rotation.set(pitch,yaw,0);
 }
 
 function zoomCamera(e){
@@ -128,8 +143,8 @@ function translateSphere(e, sphere){
 	var mouseX = e.movementX;
 	var mouseY = e.movementY;
 
-	sphere.object.position.x += mouseX;
-	sphere.object.position.z += mouseY;
+	sphere.object.position.x = mouseX;
+	sphere.object.position.z = mouseY;
 }
 
 function addSphereAt(e){
