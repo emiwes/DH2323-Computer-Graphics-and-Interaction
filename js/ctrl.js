@@ -54,7 +54,7 @@ function initCtrl(){
 				panCamera("x", 4);
 				break;
 			case "Space":
-				EPICENTERS = [];
+				clearWaves();
 				break;
 			case "KeyR":
 				panCamera("y", 4);
@@ -62,8 +62,19 @@ function initCtrl(){
 			case "KeyF":
 				panCamera("y", -4);
 				break;
+			case "KeyL":
+				dragCamera = !dragCamera;
+				break;
 		}
 	});
+}
+
+function clearWaves(){
+	EPICENTERS = [];
+	for(var i = 0; i < SPHERES.length;i++){
+		SPHERES[i].position.y = 0;
+	}
+	
 }
 
 function panCamera(dir, amount){

@@ -173,10 +173,10 @@ function addRainDrops(amount){
 		depthTest: false
 	});
 
-	var xMax = CAMERA.position.x + 500;
-	var xMin = CAMERA.position.x - 500;
-	var zMax = CAMERA.position.z + 500;
-	var zMin = CAMERA.position.z - 500;
+	var xMax =CAMERA.position.x + 500;
+	var xMin =CAMERA.position.x - 500;
+	var zMax =CAMERA.position.z + 500;
+	var zMin =CAMERA.position.z - 500;
 
 	var rainDropGeometry = new THREE.Geometry();
 
@@ -196,10 +196,10 @@ function addRainDrops(amount){
 
 function rainFall(){
 	
-	var xMax = CAMERA.position.x + 500;
-	var xMin = CAMERA.position.x - 500;
-	var zMax = CAMERA.position.z + 500;
-	var zMin = CAMERA.position.z - 500;
+	var xMax =CAMERA.position.x + 500;
+	var xMin =CAMERA.position.x - 500;
+	var zMax =CAMERA.position.z + 500;
+	var zMin =CAMERA.position.z - 500;
 
 	for (var i = 0; i < RAIN.geometry.vertices.length; i++){
 		var drop = RAIN.geometry.vertices[i];
@@ -257,11 +257,11 @@ function floating(obj){
 		if(-yDiff < h) {
 			h = -yDiff;
 		}
-		obj.userData.velocity.x /= 1.5;
-		obj.userData.velocity.z /= 1.5;
+		obj.userData.velocity.x /= 1.01;
+		obj.userData.velocity.z /= 1.01;
 
-		obj.userData.velocity.x += objNormal.x/10;
-		obj.userData.velocity.z += objNormal.y/10;
+		obj.userData.velocity.x += objNormal.x/5;
+		obj.userData.velocity.z += objNormal.y/5;
 
 		//submerged volyme
 		//volume of sphere cap?
@@ -300,7 +300,7 @@ function animate(){
 		var wavelength = EPICENTERS[j].wavelength;
 		var decay = EPICENTERS[j].decay;
 		var deltaStep = STEP.getElapsedTime() - EPICENTERS[j].startTime;
-		deltaStep*=5;
+		deltaStep*=6;
 
 		var magnitude = EPICENTERS[j].magnitude;// - deltaStep;// * decay;
 		var wavefront = deltaStep*wavelength;// + wavelength;
@@ -329,10 +329,10 @@ function animate(){
 	}
 
 	for(var i = 0; i < SPHERES.length; i++){
+		floating(SPHERES[i]);
 		SPHERES[i].position.y += SPHERES[i].userData.velocity.y;
 		SPHERES[i].position.x += SPHERES[i].userData.velocity.x;
 		SPHERES[i].position.z += SPHERES[i].userData.velocity.z;
-		floating(SPHERES[i]);
 	}
 
 	plane.geometry.computeFaceNormals();
