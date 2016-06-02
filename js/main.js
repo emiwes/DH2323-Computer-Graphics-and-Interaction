@@ -265,7 +265,8 @@ function floating(obj){
 
 		//submerged volyme
 		//volume of sphere cap?
-		var volSubmerged = ((Math.PI*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
+		var a = Math.sqrt(h*(2*r-h));
+		var volSubmerged = ((Math.PI*h)/6)*(3*(a^2)+h^2);
 		//volSubmerged *= 0.005;
 		obj.userData.velocity.y += 0.01*volSubmerged;
 		//obj.userData.velocity.x *= objNormal.x;
