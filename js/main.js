@@ -17,7 +17,7 @@ document.body.appendChild( stats.dom );
 
 
 function deg2rad(deg){
-	var res = deg * (3.14 / 180);
+	var res = deg * (Math.PI / 180);
 	return res;
 }
 
@@ -265,7 +265,8 @@ function floating(obj){
 
 		//submerged volyme
 		//volume of sphere cap?
-		var volSubmerged = ((3.14*h)/6)*(3*(Math.sqrt(h*(2*r-h)))^2+h^2);
+		var a = Math.sqrt(h*(2*r-h));
+		var volSubmerged = ((Math.PI*h)/6)*(3*(a^2)+h^2);
 		//volSubmerged *= 0.005;
 		obj.userData.velocity.y += 0.01*volSubmerged;
 		//obj.userData.velocity.x *= objNormal.x;
